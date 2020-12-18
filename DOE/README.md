@@ -1,2 +1,1 @@
-# DSI
-Data Science Initiative at UC Irvine
+# Design of Experiments. This course was taught by Navneet Hakhu for the UCI Data Science Initiative (DSI)
