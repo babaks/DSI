@@ -1,4 +1,4 @@
-# Data Exploration and Visualization using R and ggplot2
+# Data Exploration and Visualization using R and ggplot2. This course was taught by Arnold Seong for the UCI Data Science Initiative (DSI).
 
 # Description
 This course is intended to help people with little to no experience using R take their first steps on a data analysis. We provide an overview of introductory R programming, then focus on using R and ggplot2 for data exploration and visualization.  Please note that this workshop's focus is on getting you the tools you need to work with your data in R and visualize it; we will not be covering any statistical methods/tests.
