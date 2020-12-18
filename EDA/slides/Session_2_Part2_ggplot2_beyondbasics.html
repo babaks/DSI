@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro to R and Data Visualization with ggplot2: Session 2 part 2</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Arnold Seong" />
+    <meta name="date" content="2020-06-22" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="libs/kePrint-0.0.1/kePrint.js"></script>
+    <link rel="stylesheet" href="https:\\cdnjs.cloudflare.com\ajax\libs\animate.css\3.7.0\animate.min.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Intro to R and Data Visualization with ggplot2: Session 2 part 2
+## UCI Data Science Initiative
+### Arnold Seong
+### 22 June 2020
+
+---
+
+
+
+
+
+
+layout: true
+
+&lt;style&gt;
+pre {
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+    margin: 1em 0px;
+    margin-top: 0.5em;
+    margin-right: 0px;
+    margin-bottom: 0em;
+    margin-left: 0px;
+}
+.remark-inline-code {
+  background: #F5F5F5; 
+}
+&lt;/style&gt;
+
+
+&lt;!-- xaringan::inf_mr() --&gt;
+
+---
+class: animated, fadeIn
+
+## Workshop info
++ We will be recording today's sessions for potential future use
+    + 
+    + MAY NEED TO ADD INSTRUCTIONS IF PARTICPANTS DO NOT WANT TO BE SEEN/HEARD
+    + TEST OUT FIRST
+    +
+    
++ Please ask questions during lectures &amp; throughout the day!
+    + Use chat
+    + Raise hand (`Alt+Y`)
+    + Unmute yourself temporarily (hold `Spacebar`).
+
+
+&lt;!-- + To access course materials please visit the [IDA-with-R website](https://ucidatascienceinitiative.github.io/IDA-with-R/). --&gt;
+&lt;!-- + **Please [download](https://github.com/UCIDataScienceInitiative/IDA-with-R/archive/master.zip) &amp; unzip the Github repository!** --&gt;
+
+
+---
+class: inverse
+## Session 2 Topics
+
+1.  Introduction to ggplot2 and the "grammar of graphics"
+  - understanding the logic of ggplot2
+  - overlaying geoms
+  - visualizing strata for comparison
+1. Beyond ggplot2 basics
+  - preparing and plotting data
+  - changing default plot options
+
+
+
+---
+class: inverse, animated, fadeIn
+## Session 2 Topics
+
+1. **Introduction to ggplot2 and the "grammar of graphics"**
+  - **understanding the logic of ggplot2**
+  - **overlaying geoms**
+  - **visualizing strata for comparison**
+1. Beyond ggplot2 basics
+  - preparing and plotting data
+  - changing default plot options
+
+
+
+
+
+---
+## Intro to session 2 part 2
+- more specific EDA as illustration
+
+- goal is not to cover every command comprehensively
+
+- discuss merging new data, but not how to get the data
+
+
+
+
+
+
+
+
+---
+## Longitudinal EDA: observation table
+For longitudinal data, one important indication of data quality is the number of times you observe your subjects.
+
+You can use the `table()` function for this, which counts how many times a particular value appears in the data.  
+
+--
+
+#### &amp;nbsp;
+
+`table()` is typically used for factor levels
+
+
+```r
+library(ggplot2)
+table(diamonds$cut)
+```
+
+```
+## 
+##      Fair      Good Very Good   Premium     Ideal 
+##      1610      4906     12082     13791     21551
+```
+
+
+
+
+
+
+---
+## Longitudinal EDA: observation table
+For longitudinal data, one important indication of data quality is the number of times you observe your subjects.
+
+You can use the `table()` function for this, which counts how many times a particular value appears in the data.  
+
+
+#### &amp;nbsp;
+
+`table()` is typically used for factor levels ... and to make contingency tables:
+
+
+```r
+table(diamonds$cut, diamonds$color)
+```
+
+```
+##            
+##                D    E    F    G    H    I    J
+##   Fair       163  224  312  314  303  175  119
+##   Good       662  933  909  871  702  522  307
+##   Very Good 1513 2400 2164 2299 1824 1204  678
+##   Premium   1603 2337 2331 2924 2360 1428  808
+##   Ideal     2834 3903 3826 4884 3115 2093  896
+```
+
+
+
+
+
+
+---
+## Observation table (2)
+Here we'll use the NYTimes dataset from before, `ct`
+
+
+```r
+table(ct$fips)[1:60] # just the first 60
+```
+
+--
+
+
+```
+## 
+## 1001 1003 1005 1007 1009 1011 1013 1015 1017 1019 1021 1023 1025 1027 1029 1031 
+##   88   98   78   82   87   86   87   94   93   87   87   86   80   87   87   79 
+## 1033 1035 1037 1039 1041 1043 1045 1047 1049 1051 1053 1055 1057 1059 1061 1063 
+##   87   80   86   85   86   92   80   87   86   99   85   87   82   89   69   85 
+## 1065 1067 1069 1071 1073 1075 1077 1079 1081 1083 1085 1087 1089 1091 1093 1095 
+##   82   78   89   92   99   92   92   87   97   99   86   83   95   86   91   87 
+## 1097 1099 1101 1103 1105 1107 1109 1111 1113 1115 1117 1119 
+##   93   84   99   88   72   87   87   85   87   95   97   82
+```
+
+
+Each entry is named with the value in `fips`, and tells us how many times it appears in our data.
+--
+
+
+```r
+length(table(ct$fips))
+```
+
+```
+## [1] 3013
+```
+
+--
+
+Now it's much easier to sift through these by hand and look for patterns!
+
+
+
+
+
+---
+## Observation table (3)
+
+Not really.  Instead, we run table on it again.
+
+
+```r
+table(table(ct$fips))
+```
+
+--
+
+
+```
+## 
+##   1   2   3   4   5   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21 
+##   3   4   1   1   4   4   2   2   4   5   1   1   2   4   4   3   5   2   4   2 
+##  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  41  42 
+##   7   4   6   1   2   2   5   6   3   3   8   4   3   5   4   4   3   1   3   4 
+##  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60  61  62 
+##   6  10   7   5   5   7   4  10   4   7  13   8   5   7   7  11   8   9   6  11 
+##  63  64  65  66  67  68  69  70  71  72  73  74  75  76  77  78  79  80  81  82 
+##  13  13  13  15  14  13  18  31  31  29  27  56  47  35  48  62  76  62  80 100 
+##  83  84  85  86  87  88  89  90  91  92  93  94  95  96  97  98  99 100 101 102 
+##  87 104 120 127 177 126  85 101 117 146 123  93  70  45  53  59  59  50  39  33 
+## 103 104 105 106 107 108 109 110 111 113 115 116 117 120 121 124 129 131 136 139 
+##  19  18  21  25  10   4   2   6   3   2   3   1   2   1   1   1   1   1   1   1 
+## 140 141 146 147 148 151 
+##   1   1   2   1   1   1
+```
+
+--
+
+Now the patterns are much clearer!
+
+
+
+
+
+---
+## Observation table (4)
+Ok, sorry.  That's not very helpful at all.
+
+Actually, `table(table( &lt;unique_subj_ID&gt; ))` *is* usually helpful to see, for example, 
+
+--
+
+- how many of the 15 planned followups that patients in your study attended 
+
+--
+
+- if you subset the data to the first, middle, and last 5, the areas where you have the most observations
+
+--
+
+i.e. to start identifying where the data may be **sparse** or **rich**.
+
+
+???
+
+PRESENTER NOTES:
+
+i.e. studies with relatively limited numbers of planned followups
+
+**For the NYTimes COVID-19 data, our situation is a little different**
+What information would we get from knowing the number of observations we have of each county?
+
+Yes, we get a sense of data quality 
+
+But the **most direct implication** of # of obs is
+- earlier / later detection in the county
+- likely correlated with present number of cases
+  - discrepancies could be interesting, especially if descrepancies were mapped
+
+**There are better plots for these.  This is just a starting point.**
+
+
+
+
+
+
+---
+## Observation table (5)
+That's not true here.  There's just too much.  So, instead, we'll plot it.
+
+
+```r
+plot(table(table(ct$fips)))
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-8-1.png)&lt;!-- --&gt;
+
+???
+PRESENTER NOTES:
+
+- data quality - lots of high counts (we knew that), should be able to get a good sense of the time course and trajectory over time
+  - might be interesting to subset to urban / rural areas
+
+Once we have better understanding of when the virus entered communities (i.e. via genomic analysis).  
+- Count the days since entrance
+- table that by county and plot it
+- comparison of these:  
+    - if the plot is the ssame, just shifted, we get a sense of the lag between virus entrance and detection
+    - if the plot is significantly different, that tells us certain counties were quicker/slower to respond
+
+**There are better plots for these.  This is just a starting point.**
+
+
+
+
+
+
+---
+## Observation plot in ggplot2
+
+Remember that we wanted to see if, after a county enters the dataset, it stays in the dataset?  
+
+One nice thing about having dates of observations is that we can plot each county by date.  Let's take a first shot.
+
+- going to use `geom_raster()` here: draws tiles of same size centered at (x,y) coords
+
+
+
+
+---
+## Observation plot in ggplot2
+
+```r
+ggplot(data=ct, aes(x=date, y=factor(fips))) +
+  geom_raster(aes(fill=cases))
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-9-1.png)&lt;!-- --&gt;
+
+???
+Not a great plot.  But it would have been SOOOOOOO much harder in base R.
+
+Pose Question:  plotting-related problems?
+
+- way too many factor levels to show at once
+    - even if could see, rownames not informative
+- scale of cases - hides everything (zooming in shows some very, very small blue lines)
+
+larger version: https://github.com/akseong/IntroEDA_Rggplot2/blob/master/images/num_obs_by_date_bad.png
+
+
+
+
+
+
+---
+## Observation plot in ggplot2
+Problems:
+
+- too many rows to see anything.
+--
+  **So subset!**
+
+--
+
+
+- even if we could see them, the `fips` codes would not be informative.
+--
+  **so choose different identifier**
+
+--
+
+- color scheme is bad for this data (mostly very low numbers, a handful of extremely high numbers)
+--
+  **re-scale the numbers, or discretize**
+
+
+
+
+
+---
+## Observation plot in ggplot2: attempt 2
+
+```r
+ggplot(data=subset(ct, state=="California"), aes(x=date, y=county)) +
+  geom_raster(aes(fill=cut(cases, quantile(cases, probs=seq(0, 1, .1), na.rm=T))))
+```
+
+--
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+???
+(changed slide plot window size manually to be super wide)
+
+Problems?  
+- stupid legend name takes up the whole plot window!
+- color scale is nausea-inducing.
+- factor (row) order is just alphabetical
+
+
+
+
+
+---
+## Attempt 2 post-mortem
+Problems:
+
+- stupid legend name!  
+--
+**We already did this with `labs()`**
+
+  - Probably don't need the "county" label either.
+
+--
+
+- color scheme = unicorn vomit.  
+--
+**Need to learn about color scaling**
+
+--
+
+- y-axis text a little too large.  
+--
+**Getting more complicated**
+
+
+--
+but the overall skeleton of the plot seems like what we want, so let's save it for now.
+
+
+```r
+CAdate_plt &lt;- ggplot(data=subset(ct, state=="California"), aes(x=date, y=county)) +
+  geom_raster(aes(fill=cut(cases, quantile(cases, probs=seq(0, 1, .1), na.rm=T))))
+```
+
+
+
+
+
+
+
+---
+## ggplot2: beyond defaults
+
+In addition to the 3 key elements (**data, aesthetic mapping, geom/stat layers**), there are many other components in a plot.
+
+Any of you who have had to prepare publication-quality plots for a journal is aware of this.
+
+--
+
+We'll mention how to manipulate some of those plotting parameters (e.g. text size, tick marks, etc.) in a moment.
+
+--
+
+But for now let's get rid of the unicorn vomit.
+
+
+
+
+
+
+---
+## Scales
+`ggplot2` calls the *particular* values that a mapping takes a **scale**.
+
+In other words, a scale determines the correspondence between values in your data and the visual values in the plot.
+
+--
+
+For example:
+
+  - axis transformations, e.g. `scale_x_log10()`, `scale_y_reverse()`
+  - a size mapping, e.g. `scale_size_discrete()`
+  - color mapping, e.g. `scale_fill_continuous()`
+
+
+(More info on scales in the [ggplot2 book](https://ggplot2-book.org/scales.html))
+
+--
+
+For example, instead of cutting by quantiles, we could have scaled the data values to the gradient values using log base 10.
+
+
+
+
+---
+## Better than unicorn vomit
+
+
+```r
+ggplot(data=subset(ct, state=="California"), aes(x=date, y=county)) +
+  geom_raster(aes(fill=cases)) +
+  scale_fill_continuous(trans="log10",    # transformation
+                        breaks=10^(1:6),  # define legend breaks 
+                        labels=10^(1:6))  # define legend labels
+```
+
+```
+## Warning: Transformation introduced infinite values in discrete y-axis
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+???
+prefer discrete scale to gradient
+
+
+
+
+
+
+---
+## ggplot2: discrete variable color scaling
+- by default, for unordered factors, `ggplot2` picks colors as far apart on the color wheel as possible. 
+
+  - this is why we obtained unicorn vomit
+
+--
+
+- for ordered factors, the default is the `viridis` palette. 
+
+  - [viridis vignette here](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html)
+
+--
+
+You can define your own colors if you want.  
+--
+But you're not a graphic designer.
+
+--
+
+The built-in palettes (`RColorBrewer` and `viridis` palettes) usually do the job well.  
+
+???
+In general, sticking to 1 or 2 color palettes is desirable, and the `viridis` palettes are pleasing and have desirable properties.
+viridis - gradient palettes optimized for contrast (same contrasts in black-and-white as in color) and color-blindness
+- viridis is a little angsty
+- RColorBrewer is a bit more cheerful
+
+
+
+
+---
+## Built-in palettes
+Since we saved our plot, we can test out some color schemes relatively easily.
+
+
+We'll try a few in the next slides.
+
+--
+
+- to use the `viridis` palettes, we add a discrete fill-color scale using `scale_fill_viridis_d()`
+
+  - can specify `option = magma`, or `inferno`, `plasma`, `viridis` (default), `cividis`
+  - for continuous variables, use `scale_fill_viridis_c()`
+
+--
+
+- to use the ColorBrewer palettes, use `scale_fill_brewer()` and specify a palette (`RColorBrewer::display.brewer.all()` to see them)
+
+???
+mention the ::
+
+
+
+---
+## viridis default
+
+
+```r
+CAdate_plt +
+  scale_fill_viridis_d() +
+  theme(legend.position = "none")
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_raster).
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-14-1.png)&lt;!-- --&gt;
+
+???
+Mention `theme(legend.position = "none")` 
+Will talk about in next chunk
+
+
+---
+## viridis "plasma"
+
+
+```r
+CAdate_plt +
+  scale_fill_viridis_d(option="plasma") +
+  theme(legend.position = "none")
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_raster).
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+---
+## viridis "magma"
+
+
+```r
+CAdate_plt +
+  scale_fill_viridis_d(option="magma") +
+  theme(legend.position = "none")
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_raster).
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+---
+## ColorBrewer "Spectral"
+
+
+```r
+CAdate_plt +
+  scale_fill_brewer(palette="Spectral") +
+  theme(legend.position = "none")
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_raster).
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+---
+## ColorBrewer "Spectral", reverse direction
+
+
+```r
+CAdate_plt +
+  scale_fill_brewer(palette="Spectral", direction=-1) +
+  theme(legend.position = "none")
+```
+
+```
+## Warning: Removed 1 rows containing missing values (geom_raster).
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+
+
+
+
+
+---
+## ggplot2: themes
+
+ggplot2 has a `theme()` argument you can use to change many other things about the appearance of the plot.
+
+- you can see the options here: [ggplot2 `theme()` reference page](https://ggplot2.tidyverse.org/reference/theme.html)
+
+--
+
+There are default themes (e.g. `theme_bw()`, `theme_classic()`, `theme_dark()` etc.) 
+
+- you can use these as a base theme, then change individual theme elements using `theme()`
+
+
+
+
+---
+## Final plot
+You might remember we wanted to do a few things:
+1. choose a better color palette
+1. shorten legend title, remove axis labels
+1. make y-axis text smaller
+
+
+
+```r
+CAdate_plt +
+  scale_fill_viridis_d(option="plasma", direction=-1) +
+  labs(title="COVID-19 cumulative cases (deciles) by date",
+       subtitle="counties in California",
+       x="",
+       y="",
+       fill="case counts \n (by decile)") +
+  theme_classic()+
+  theme(axis.text.y=element_text(size=7))
+```
+
+???
+Note on last line - fixes the size.  
+Usually if you resize, ggplot2 will resize these as well.
+Now it won't.
+
+
+---
+
+
+```
+## Warning: Removed 1 rows containing missing values (geom_raster).
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+???
+legend labels are not great.  Could fix those manually.
+
+Why might this be better than a line plot for our dataset?
+- y-scale - discretizing a line plot doesn't make much sense
+- emphasizes benchmark dates
+  - date of entry
+  - date of "progression" into next decile
+
+
+
+
+
+
+---
+
+## longitudinal EDA: spaghetti plot
+In a longitudinal analysis, a line plot of individual subject trajectories (a 'spaghetti plot') can provide a lot of useful information, e.g. intra- versus inter-subject/group variation.
+
+Quick illustration using the `Indometh` dataset (in base R):
+
+
+--
+
+.pull-left[
+
+```r
+ggplot(Indometh, aes(x=time, y=conc)) + 
+  geom_line(aes(color=Subject)) 
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-22-1.png)&lt;!-- --&gt;
+]
+
+--
+
+.pull-right[
+
+```r
+ggplot(Indometh, aes(x=time, y=log(conc))) + 
+  geom_line(aes(color=Subject)) 
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-23-1.png)&lt;!-- --&gt;
+]
+
+
+???
+2 lines!  base R would require at least a loop.
+
+If we had different groups, could specify group=Subject and color=group.
+Could also facet-wrap.
+Ways of plotting all lines (faded) with group darkened in facet-wrap
+
+
+
+
+---
+## line plot for nytimes data
+
+
+```r
+ggplot(ct, aes(x=date, y=cases, color=county)) +
+  geom_line() +
+  theme(legend.position="none")
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-24-1.png)&lt;!-- --&gt;
+
+
+
+---
+## line plot post-mortem
+Problems:
+
+- what's with the vertical lines?  
+--
+**remember the end of Exercise 1?  Need to fix.**
+
+--
+
+- scale of y-axis - a few observations dominates everything  
+--
+**rescale, or subset**
+
+--
+
+- so many different factor levels a legend is impossible
+  - so... group and... average? sum? group by state? by region?  politics?
+  - choropleth map will be nice, but mostly for showing one date only
+
+
+
+???
+coloring by county is problematic - remember from the end of exercise 1?.
+- 4 states have an Adair county
+
+```r
+unique(subset(ct, county=="Adair")$state)
+```
+
+```
+## [1] Iowa     Missouri Oklahoma Kentucky
+## 55 Levels: Alabama Alaska Arizona Arkansas California Colorado ... Wyoming
+```
+- could color by `fips`, but uninterpretable.
+
+
+
+
+---
+## Data manipulation: fix county factor
+
+Different states may share a county with the same name, but a county-state pair should be unique.
+
+- alternative: when showing a legend, could color by `fips` but coerce the legend to display the county names.  
+
+  - not a great solution: requires repeated coding by hand.
+  
+--
+
+#### &amp;nbsp;
+
+- using full state names will also make the legends really wide (when we can show them).  Let's use abbreviations.  
+
+  - luckily R has built-in state name and abbreviation vectors, and a `match()` function
+  
+  
+
+
+
+
+
+---
+## test our matching code
+
+
+```r
+# make a test vector of state names  
+st_test &lt;- sample(c(state.name), 10, replace=T)
+```
+--
+
+```r
+# match them to the abbreviations 
+abbs_test &lt;- state.abb[match(st_test, state.name)]
+```
+--
+
+```r
+# check  
+cbind(st_test, abbs_test)
+```
+
+```
+##       st_test         abbs_test
+##  [1,] "New Mexico"    "NM"     
+##  [2,] "Arkansas"      "AR"     
+##  [3,] "North Dakota"  "ND"     
+##  [4,] "New York"      "NY"     
+##  [5,] "Mississippi"   "MS"     
+##  [6,] "West Virginia" "WV"     
+##  [7,] "New Mexico"    "NM"     
+##  [8,] "North Dakota"  "ND"     
+##  [9,] "New Mexico"    "NM"     
+## [10,] "Maryland"      "MD"
+```
+
+--
+
+Cool!  Let's do it!
+
+
+
+
+
+---
+## one more function we need: `paste0()`
+
+- `paste0()` concatenates any number of (vectors of) strings, preserving spaces/punctuation.
+
+- We saw it in Session 1, but here it is again:
+
+
+```r
+paste0(1:5, "+", 1:5, "=", 2*1:5)
+```
+--
+
+```
+## [1] "1+1=2"  "2+2=4"  "3+3=6"  "4+4=8"  "5+5=10"
+```
+
+???
+Useful for debugging functions or loops
+- use it in a print command with the iteration number and output you want to check
+
+
+
+
+---
+## fixing the county factor
+
+
+```r
+ct$countyst &lt;- paste0(ct$county, 
+                      " ",         # add a space
+                      state.abb[match(ct$state, state.name)])
+```
+
+--
+
+
+```r
+# check
+ct[sample(1:nrow(ct), 5), c("county", "state", "countyst")]
+```
+
+```
+##           county     state     countyst
+## 138868 Chattooga   Georgia Chattooga GA
+## 120475     Brown     Texas     Brown TX
+## 207259    Wabash  Illinois    Wabash IL
+## 21953     Pitkin  Colorado    Pitkin CO
+## 112291   Buffalo Wisconsin   Buffalo WI
+```
+
+
+
+
+---
+## line plot one more time
+
+
+```r
+ggplot(ct, aes(x=date, y=cases, color=countyst)) +
+  geom_line() +
+  theme(legend.position="none")
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-33-1.png)&lt;!-- --&gt;
+
+
+
+
+
+---
+## add some text
+
+
+```r
+ggplot(ct, aes(x=date, y=cases, color=countyst)) +
+  geom_line() +
+  geom_text(data=subset(ct, date==max(date) &amp; cases&gt;45000),
+            aes(x=date-10, y=cases, label=countyst),
+            color="grey30") +
+  theme(legend.position="none")
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-34-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+## log-scaled
+
+
+```r
+ggplot(subset(ct, cases&gt;0), aes(x=date, y=cases, color=countyst)) +
+  geom_line() +
+  theme(legend.position="none") + 
+  scale_y_log10()
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-35-1.png)&lt;!-- --&gt;
+
+???
+- subsetted to cases&gt;0 (176 cases=0) because log(0)=-inf
+- some odd vertical lines - believe these are the "unknown" counties
+
+
+---
+## log-scaled
+
+
+```r
+ggplot(subset(ct, cases&gt;0 &amp; county !="Unknown"), 
+       aes(x=date, y=cases, color=countyst)) +
+  geom_line() +
+  theme(legend.position="none") + 
+  scale_y_log10()
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-36-1.png)&lt;!-- --&gt;
+
+???
+best we're going to get in terms of a wholistic picture of trajectories
+
+
+
+
+---
+## subset to CA
+
+```r
+ggplot(subset(ct, state=="California"), 
+       aes(x=date, y=cases, color=countyst)) +
+  geom_line() 
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-37-1.png)&lt;!-- --&gt;
+
+
+---
+## subset to CA, log-scaled y-axis
+
+```r
+ggplot(subset(ct, state=="California" &amp; cases&gt;0), 
+       aes(x=date, y=cases, color=countyst)) +
+  geom_line() + 
+  scale_y_log10(breaks=c(10, 50, 100, 500, 1000, 5000, 10000))
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-38-1.png)&lt;!-- --&gt;
+
+
+
+---
+## re-order the factor levels
+
+Legends for discrete variables are ordered by the factor level.  As an exercise, you'll re-order the factor levels and subset so that the previous plots for CA are actually readable.
+
+
+
+
+
+---
+## Data transformation with the `dplyr` package
+`dplyr` is a fantastic package for manipulating data, especially complex data
+
+*Advantages*
+
+- much easier to work with data with grouped observations
+
+- particularly, for large datasets when you may not want to continually duplicate your data, the code is much more readable.
+
+--
+
+*Disadvantages* 
+
+--
+
+- likely none if it's how you grew up
+
+
+???
+Grouped obs data - often need to use the "split-apply-combine" strategy.  Much easier and clearer in dplyr
+
+
+
+
+
+---
+## `dplyr` example for "split-apply-combine" strategy
+
+For example, to get day-to-day differences in case counts:
+
+Base R version:
+
+
+```r
+ct$case_diffs &lt;- unlist(lapply(split(ct, ct$countyst), function(x) c(NA, diff(x$cases)))))
+```
+--
+The last operation comes first, and you kind of have to read from the middle out.
+
+--
+
+`dplyr` version:
+
+```r
+library(dplyr)
+ct &lt;- ct %&gt;%
+  group_by(countyst) %&gt;%  # group your data by countyst
+  arrange(date) %&gt;%       # order (and implement the order) within the groups
+  mutate(case_diffs = c(NA, diff(cases)))  # add a new variable
+```
+
+
+???
+
+Syntactically it's a little like the difference between:
+- "The cat scratched the dog.  The dog bit the man.  The man ran away."
+- "The dog the cat scratched bit the man, who ran away" 
+    - or perhaps "The man the dog the cat scratched bit ran away."
+
+
+
+
+---
+## `dplyr` on nytimes data
+Let's use it!
+
+
+```r
+# max observed cases for county (used to subset)
+ct &lt;- ct %&gt;%
+  group_by(countyst) %&gt;%
+  mutate(maxcases = max(cases))
+
+# add column of day-to-day differences
+ct &lt;- ct %&gt;%
+  group_by(countyst) %&gt;%
+  arrange(date) %&gt;%
+  mutate(diffs_cases = c(NA, diff(cases)))
+
+# create a sliding window average
+ct &lt;- ct %&gt;%
+  group_by(countyst) %&gt;%
+  arrange(date) %&gt;%
+  mutate(diffs_roll = data.table::frollmean(diffs_cases, n=7, na.rm=T))
+```
+
+
+
+
+---
+## some more `dplyr`
+
+```r
+# order factor levels by most recent # cases
+# use ct_last to define order
+ct_last &lt;- ct %&gt;%
+  filter(date==max(date)) %&gt;%
+  arrange(cases, state, county) %&gt;%
+  select(county, state, countyst, cases)
+
+#re-order the factor levels
+ct$countyst &lt;- factor(ct$countyst,
+                      levels=rev(unique(ct_last$countyst)),
+                      ordered=TRUE)
+```
+
+???
+Explain why ordering the factor is helpful
+
+
+
+---
+## plot with ordered factors 
+
+```r
+ggplot(subset(ct, state=="California" &amp; maxcases&gt;500), 
+       aes(x=date, y=cases, color=countyst)) +
+  geom_line() + 
+  scale_y_log10(breaks=c(10, 50, 100, 500, 1000, 5000, 10000)) +
+  labs(title="cumulative case counts, log-scaled",
+       subtitle="California counties with &gt; 500 cases",
+       color="county name \n (ordered by # cases)")
+```
+
+![](Session_2_Part2_ggplot2_beyondbasics_files/figure-html/unnamed-chunk-43-1.png)&lt;!-- --&gt;
+
+
+
+---
+## Merging data
+
+Finally, let's go over a bit of data augmentation before the break + exercise.
+
+--
+
+- One highly informative variable that we are missing is county population.
+
+- Let's grab it from the Census Bureau
+
+--
+
+
+```r
+cens &lt;- read.csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/totals/co-est2019-alldata.csv")
+dim(cens)
+```
+
+```
+## [1] 3193  164
+```
+
+--
+We don't need 164 variables... we just need 
+1. county population and
+1. a unique county identifier (that matches one in `ct`)
+
+
+
+
+
+
+---
+## Census data
+
+If we look at the data (even a single row won't fit on a slide, so you'll have to do it yourself), we can identify some of the variables we need.
+
+We'll take:
+- `POPESTIMATE2019`: 2019 population estimate
+- `CTYNAME`: county name
+- `STNAME`: state name
+- `STATE`: fips code for state
+- `COUNTY`: fips code for county
+
+
+```r
+cens &lt;- data.frame("pop2019" = cens$POPESTIMATE2019,
+                   "county" = cens$CTYNAME,
+                   "state" = cens$STNAME,
+                   "fips_st" = cens$STATE,
+                   "fips_ct" = cens$COUNTY)
+```
+
+
+
+
+---
+## Census data, select variables
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; pop2019 &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; county &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; state &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; fips_st &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; fips_ct &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 4903185 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Alabama &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Alabama &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 55869 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Autauga County &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Alabama &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 223234 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Baldwin County &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Alabama &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 24686 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Barbour County &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Alabama &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 22394 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Bibb County &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Alabama &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 57826 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Blount County &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Alabama &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+--
+
+What issues are we going to have joining this with the nytimes data?  
+
+--
+
+We need:
+1. the population by county
+1. a unique identifier for each county that is shared between the datasets
+
+
+
+
+---
+## Census data difficulties
+
+- Complete state totals are in the data (i.e. first line)
+
+--
+
+- FIPS codes split up into state (first 2 digits) and county (last 3 digits)
+
+--
+
+- County names formatted differently - see name + "County" in the head, but there's more:
+
+
+```r
+library(stringr)
+ct_words &lt;- str_split(cens$county, pattern=" ")
+last_words &lt;- unlist(lapply(ct_words, function(x) x[ifelse(length(x)&gt;1, length(x), 0)]))
+table(last_words)
+```
+
+```
+## last_words
+##         Area      Borough     Carolina         city         City     Columbia 
+##           10           17            2           40            1            2 
+##       County       Dakota    Hampshire       Island       Jersey       Mexico 
+##         3007            2            1            1            1            1 
+## Municipality       Parish     Virginia         York 
+##            2           64            1            1
+```
+
+
+
+
+
+
+
+
+---
+## function to combine FIPS
+
+
+```r
+#fips codes: 2-digit state + 3-digit county
+combine_fips &lt;- function(f_st, f_ct){
+  # f_ct=0 indicates a state total
+  f_ct &lt;- ifelse(f_ct==0, NA, f_ct) 
+  
+  # count # digits in county FIPS code
+  # &amp; how many 0s needed between codes
+  num_dig &lt;- 1+floor(log(f_ct, 10)) 
+  num_0s &lt;- 3-num_dig 
+  
+  # stick num0s 0s between the state and county codes
+  if(is.na(num_0s)){
+    return(NA)
+  } else if (num_0s==0){
+    return(as.numeric(paste0(f_st,f_ct)))
+  } else if (num_0s==1){
+    return(as.numeric(paste0(f_st, "0", f_ct)))
+  } else if (num_0s==2){
+    return(as.numeric(paste0(f_st, "00", f_ct)))
+  }
+}
+```
+
+
+
+
+
+---
+## apply function combine_fips()
+
+
+```r
+cens$fips &lt;- apply(cens, 1, function(x) combine_fips(f_st=as.numeric(x["fips_st"]), 
+                                                     f_ct=as.numeric(x["fips_ct"])))
+```
+
+
+Quick comment:
+- this won't work without `as.numeric()`
+
+--
+
+- `apply()` treats the row as a vector
+
+--
+
+- b/c `cens` contains columns of strings, the row-vector is treated as a character vector
+
+--
+
+i.e., understanding how data typing works is actually helpful.
+
+
+
+---
+## merge datasets using left_join()
+
+Use the `join()` functions from `dplyr` to merge tables easily.
+- `left_join(x,y, by="var_name")` matches entries in var_name between x and y, and joins the row in y to the corresponding rows in x
+- the other `join()` functions work similarly
+
+--
+
+So... let's do it!
+
+--
+
+I like to save it as something else, just in case.
+
+
+```r
+ct_test &lt;- left_join(ct, cens, by="fips")
+```
+
+```
+## Error: Can't join on 'fips' x 'fips' because of incompatible types (factor / numeric)
+```
+--
+...Dangit.  
+
+
+
+
+---
+## Ok, relatively easily.
+
+
+```r
+# checking each fips appears only 1x in cens
+# otherwise left_join() will duplicate unnecessarily
+sum(table(cens$fips))==length(unique(cens$fips)) 
+```
+
+```
+## [1] FALSE
+```
+--
+
+... probably coming from multiple `NA` values (each state total)?
+
+--
+
+```r
+cens &lt;- cens[!is.na(cens$fips), ] # may be more than one NA here
+sum(table(cens$fips))==length(unique(cens$fips))
+```
+
+```
+## [1] TRUE
+```
+--
+
+Yay!
+
+--
+
+```r
+cens$fips &lt;- factor(cens$fips)
+ct_test &lt;- left_join(ct, cens, by="fips")
+```
+
+```
+## Warning: Column `fips` joining factors with different levels, coercing to
+## character vector
+```
+
+Translation: joining based on character strings rather than factor level numbers.
+
+???
+ok, now it's time to check.
+
+
+
+
+
+
+---
+## check merged dataset
+
+```r
+names(ct_test)
+```
+
+```
+##  [1] "date"        "county.x"    "state.x"     "fips"        "cases"      
+##  [6] "deaths"      "coastal"     "countyst"    "case_diffs"  "maxcases"   
+## [11] "diffs_cases" "diffs_roll"  "pop2019"     "county.y"    "state.y"    
+## [16] "fips_st"     "fips_ct"
+```
+
+```r
+ct_test[, c("county.x", "fips", "county.y")]
+```
+
+```
+## # A tibble: 251,934 x 3
+##    county.x    fips  county.y          
+##    &lt;fct&gt;       &lt;chr&gt; &lt;fct&gt;             
+##  1 Snohomish   53061 Snohomish County  
+##  2 Snohomish   53061 Snohomish County  
+##  3 Snohomish   53061 Snohomish County  
+##  4 Cook        17031 Cook County       
+##  5 Snohomish   53061 Snohomish County  
+##  6 Orange      6059  Orange County     
+##  7 Cook        17031 Cook County       
+##  8 Snohomish   53061 Snohomish County  
+##  9 Maricopa    4013  Maricopa County   
+## 10 Los Angeles 6037  Los Angeles County
+## # ... with 251,924 more rows
+```
+???
+this is why I left county and state in both datasets
+
+
+
+
+
+---
+## check merged dataset
+Looks OK. (I'd usually do more spot-checking with the whole row)
+
+--
+
+Now let's get rid of duplicated columns.
+
+```r
+ct_test &lt;- ct_test[, 1:13]
+colnames(ct_test)[c(2, 3, 13)] &lt;- c("county", "state", "pop")
+```
+
+--
+
+We don't need `ct_test` anymore...
+
+```r
+ct &lt;- ct_test
+rm(ct_test) # delete
+```
+
+
+
+
+
+---
+## head of ct with population
+&lt;table class="table table-striped table-hover" style="font-size: 11px; margin-left: auto; margin-right: auto;"&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; date &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; county &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; state &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; fips &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; cases &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; deaths &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; coastal &lt;/th&gt;
+   &lt;th style="text-align:left;"&gt; countyst &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; case_diffs &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; maxcases &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; diffs_cases &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; diffs_roll &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; pop &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2020-01-21 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Washington &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 53061 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; coastal &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish WA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3678 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 822083 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2020-01-22 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Washington &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 53061 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; coastal &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish WA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3678 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 822083 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2020-01-23 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Washington &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 53061 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; coastal &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish WA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3678 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 822083 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2020-01-24 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cook &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Illinois &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 17031 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; not coastal &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Cook IL &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 86551 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 5150233 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2020-01-24 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Washington &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 53061 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; coastal &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Snohomish WA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3678 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 822083 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; 2020-01-25 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Orange &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; California &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; 6059 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0 &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; coastal &lt;/td&gt;
+   &lt;td style="text-align:left;"&gt; Orange CA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9597 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; NA &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3175692 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+
+
+
+
+---
+## End Session 2
+
+
+Next up:
+- 3pm-4pm: Break &amp; Exercises 2: 
+  - perform the data manipulations here, then augment the data further with 2016 election results
+  - perform your own EDA
+
+- 4pm-5pm: Session 3: 
+  - share some ggplot2 plots!
+  - choropleth maps
+
+
+Also: [ggplot2 cheatsheet](https://rstudio.com/wp-content/uploads/2016/11/ggplot2-cheatsheet-2.1.pdf) (published by Rstudio)
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

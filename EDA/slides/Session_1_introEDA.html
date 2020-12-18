@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro to R and Data Visualization with ggplot2: Session 1 part 2: intro EDA with R</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Arnold Seong" />
+    <meta name="date" content="2020-06-22" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <script src="libs/kePrint-0.0.1/kePrint.js"></script>
+    <link href="libs/table1-1.0/table1_defaults.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https:\\cdnjs.cloudflare.com\ajax\libs\animate.css\3.7.0\animate.min.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Intro to R and Data Visualization with ggplot2: Session 1 part 2: intro EDA with R
+## UCI Data Science Initiative
+### Arnold Seong
+### 22 June 2020
+
+---
+
+
+
+
+
+
+layout: true
+
+&lt;style&gt;
+pre {
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+    margin: 1em 0px;
+    margin-top: 0.5em;
+    margin-right: 0px;
+    margin-bottom: 0em;
+    margin-left: 0px;
+}
+.remark-inline-code {
+  background: #F5F5F5; 
+}
+&lt;/style&gt;
+
+
+
+
+---
+class: animated, fadeIn
+
+## Workshop info
++ We will be recording today's sessions for potential future use
+    + You may not want to activate video
+    + Please set your zoom to mute your audio until you would like to speak
+    + You can change your icon name by mousing over, clicking on the 3 dots
+    
++ Please ask questions during lectures &amp; throughout the day!
+    + Use chat
+    + Raise hand (`Alt+Y`)
+    + Unmute yourself temporarily (hold `Spacebar`).
+
+
+&lt;!-- + To access course materials please visit the [IDA-with-R website](https://ucidatascienceinitiative.github.io/IDA-with-R/). --&gt;
+&lt;!-- + **Please [download](https://github.com/UCIDataScienceInitiative/IDA-with-R/archive/master.zip) &amp; unzip the Github repository!** --&gt;
+
+
+
+
+---
+## Importance of EDA: Anscombe's quartet
+
+**Anscombe's quartet** is a famous set of four (x,y) pairings that illustrate the importance of plotting your data and EDA in general.
+
+- The most common numerical summaries (mean, standard deviation, correlation) are identical
+
+- The linear regression coefficients (regressing y on x) are also identical!
+
+--
+#### &amp;nbsp;
+
+&lt;table class="table table-striped" style="margin-left: auto; margin-right: auto;"&gt;
+&lt;caption&gt;Anscombe's Quartet, rounded to 4 decimals&lt;/caption&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:right;"&gt; set &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean(x) &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; mean(y) &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; sd(x) &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; sd(y) &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; cor(x,y) &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; intercept &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; x_effect &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 1 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.5009 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.3166 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.0316 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.8164 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.0001 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.5001 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 2 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.5009 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.3166 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.0317 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.8162 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.0009 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.5000 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 3 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.5000 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.3166 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.0304 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.8163 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.0025 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.4997 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:right;"&gt; 4 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 7.5009 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.3166 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.0306 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.8165 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.0017 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.4999 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+
+
+
+
+---
+## Anscombe's Quartet, plotted
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-2-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+class: inverse
+## Session 2 Topics
+
+1. Basic data exploration
+  + Getting a sense of your data: summaries, tables
+  + Making your data useful: transformations
+  + plotting with base R
+
+
+
+# EDIT EDIT EDIT
+
+
+
+---
+## Intro: basic EDA
+
+There is no set process for Exploratory Data Analysis, though there are some guiding principles.
+
+In this portion of the workshop, we'll cover a few things that are almost always good starting points
+
+  - We'll use a commonly-used dataset that comes loaded with R, the `airquality` dataset.
+  
+  - Our EDA process will become more complex and specific to our NYTimes dataset in the next portions of the workshop.
+
+
+
+
+---
+## EDA goals:
+
+In general, there are 2 main goals of EDA:
+
+1. Assess the structure and quality of your data
+  
+1. Investigate patterns
+
+--
+
+  - variation in 1 variable
+
+--
+  
+  - covariation between variables
+  
+
+
+
+
+
+
+---
+## Basic EDA: `str()`
+
+A good place to start is knowing something about your dataset!
+
+  - First, look at the help file for `airquality` by typing `?airquality`
+
+After that, try out `str()`, which explains the internal structure of an object.
+
+--
+
+
+```r
+str(airquality)
+```
+
+```
+## 'data.frame':	153 obs. of  6 variables:
+##  $ Ozone  : int  41 36 12 18 NA 28 23 19 8 NA ...
+##  $ Solar.R: int  190 118 149 313 NA NA 299 99 19 194 ...
+##  $ Wind   : num  7.4 8 12.6 11.5 14.3 14.9 8.6 13.8 20.1 8.6 ...
+##  $ Temp   : int  67 72 74 62 56 66 65 59 61 69 ...
+##  $ Month  : int  5 5 5 5 5 5 5 5 5 5 ...
+##  $ Day    : int  1 2 3 4 5 6 7 8 9 10 ...
+```
+
+--
+
+- What do you notice?
+
+--
+
+- you'll use this more in the exercises!
+
+
+
+
+
+---
+## Basic EDA: `Month` into factor
+
+For illustrative purposes, since we don't have any categorical variables here, let's make a factor.  We'll split the months into "Summer" and "Fall"
+
+- "Summer" will correspond to `Month` values 5, 6, 7
+
+- "Fall" will correspond to `Month` values 8, 9
+
+--
+
+
+```r
+airquality$season &lt;- factor(airquality$Month, levels=5:9,
+    labels=c("Summer", "Summer", "Summer", "Fall", "Fall"))
+```
+
+
+
+
+
+---
+## Basic EDA: `summary()`
+A quick first step in any data analysis is to generate what are commonly known as 5-number summaries.  
+- You can do this (well, a 6-number version) quickly in R using `summary()`
+
+
+```r
+summary(airquality)
+```
+
+```
+##      Ozone           Solar.R           Wind             Temp      
+##  Min.   :  1.00   Min.   :  7.0   Min.   : 1.700   Min.   :56.00  
+##  1st Qu.: 18.00   1st Qu.:115.8   1st Qu.: 7.400   1st Qu.:72.00  
+##  Median : 31.50   Median :205.0   Median : 9.700   Median :79.00  
+##  Mean   : 42.13   Mean   :185.9   Mean   : 9.958   Mean   :77.88  
+##  3rd Qu.: 63.25   3rd Qu.:258.8   3rd Qu.:11.500   3rd Qu.:85.00  
+##  Max.   :168.00   Max.   :334.0   Max.   :20.700   Max.   :97.00  
+##  NA's   :37       NA's   :7                                       
+##      Month            Day          season  
+##  Min.   :5.000   Min.   : 1.0   Summer:92  
+##  1st Qu.:6.000   1st Qu.: 8.0   Fall  :61  
+##  Median :7.000   Median :16.0              
+##  Mean   :6.993   Mean   :15.8              
+##  3rd Qu.:8.000   3rd Qu.:23.0              
+##  Max.   :9.000   Max.   :31.0              
+## 
+```
+
+
+
+
+---
+## Basic EDA: `summary()`
+
+```
+##      Ozone           Solar.R           Wind             Temp      
+##  Min.   :  1.00   Min.   :  7.0   Min.   : 1.700   Min.   :56.00  
+##  1st Qu.: 18.00   1st Qu.:115.8   1st Qu.: 7.400   1st Qu.:72.00  
+##  Median : 31.50   Median :205.0   Median : 9.700   Median :79.00  
+##  Mean   : 42.13   Mean   :185.9   Mean   : 9.958   Mean   :77.88  
+##  3rd Qu.: 63.25   3rd Qu.:258.8   3rd Qu.:11.500   3rd Qu.:85.00  
+##  Max.   :168.00   Max.   :334.0   Max.   :20.700   Max.   :97.00  
+##  NA's   :37       NA's   :7                                       
+##      Month            Day          season  
+##  Min.   :5.000   Min.   : 1.0   Summer:92  
+##  1st Qu.:6.000   1st Qu.: 8.0   Fall  :61  
+##  Median :7.000   Median :16.0              
+##  Mean   :6.993   Mean   :15.8              
+##  3rd Qu.:8.000   3rd Qu.:23.0              
+##  Max.   :9.000   Max.   :31.0              
+## 
+```
+
+- For quantitative variables, this gives you a rough sense of the range of your variables, skewness, and presence of extreme observations / data entry errors.
+
+- For qualitative variables, you can see how balanced your dataset is
+
+
+
+
+
+---
+## Did you notice the missingness?
+
+Assessing the amount of missingness in data is crucial, and should be one of your first steps.  
+
+--
+
+- If you didn't see it in the `summary()` slide, here's a different way to see it quickly:
+
+
+```r
+apply(airquality, 2, function(x) sum(is.na(x)))
+```
+
+```
+##   Ozone Solar.R    Wind    Temp   Month     Day  season 
+##      37       7       0       0       0       0       0
+```
+
+--
+
+We see that the missingness is concentrated in `Ozone` and `Solar.R`.  This might be problematic.
+
+--
+
+- The best way to tell if missingness will be problematic is to **hire a statistician** (non-ignorable missingness will bias your results!)
+
+--
+
+- We also know that there are 153 observations total.  That's a high rate of missingness in `Ozone` and likely to pose problems.
+
+
+
+
+
+
+
+---
+## Basic EDA: Table 1
+
+In many disciplines, the first table in a paper is a description of population characteristics, broken down (stratified) by a categorical variable of interest.  
+
+--
+
+- Let's pretend we're interested in `season` 
+
+--
+
+- we could make several subsets of our data and use `summary()` and format it and...
+
+--
+
+
+... Or we could use a package.  Turns out there are table-1-generating functions in many packages.  The package `table1` seems pretty good.
+
+
+```r
+install.packages("table1")
+```
+
+
+
+
+---
+## Basic EDA: Table 1
+
+
+
+```r
+library(table1)
+table1(~Ozone + Solar.R + Wind + Temp + Day | season, data=airquality)
+```
+
+<div class="Rtable1"><table class="Rtable1">
+<thead>
+<tr>
+<th class='rowlabel firstrow lastrow'></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Summer<br><span class='stratn'>(N=92)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Fall<br><span class='stratn'>(N=61)</span></span></th>
+<th class='firstrow lastrow'><span class='stratlabel'>Overall<br><span class='stratn'>(N=153)</span></span></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Ozone</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>39.6 (31.0)</td>
+<td>44.9 (35.2)</td>
+<td>42.1 (33.0)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Median [Min, Max]</td>
+<td>32.0 [1.00, 135]</td>
+<td>31.0 [7.00, 168]</td>
+<td>31.5 [1.00, 168]</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>31 (33.7%)</td>
+<td class='lastrow'>6 (9.8%)</td>
+<td class='lastrow'>37 (24.2%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Solar.R</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>197 (96.4)</td>
+<td>170 (77.4)</td>
+<td>186 (90.1)</td>
+</tr>
+<tr>
+<td class='rowlabel'>Median [Min, Max]</td>
+<td>223 [7.00, 334]</td>
+<td>193 [14.0, 273]</td>
+<td>205 [7.00, 334]</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Missing</td>
+<td class='lastrow'>4 (4.3%)</td>
+<td class='lastrow'>3 (4.9%)</td>
+<td class='lastrow'>7 (4.6%)</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Wind</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>10.3 (3.59)</td>
+<td>9.48 (3.39)</td>
+<td>9.96 (3.52)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>9.70 [1.70, 20.7]</td>
+<td class='lastrow'>9.70 [2.30, 16.6]</td>
+<td class='lastrow'>9.70 [1.70, 20.7]</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Temp</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>76.2 (9.86)</td>
+<td>80.5 (8.25)</td>
+<td>77.9 (9.47)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>78.0 [56.0, 93.0]</td>
+<td class='lastrow'>80.0 [63.0, 97.0]</td>
+<td class='lastrow'>79.0 [56.0, 97.0]</td>
+</tr>
+<tr>
+<td class='rowlabel firstrow'><span class='varlabel'>Day</span></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+<td class='firstrow'></td>
+</tr>
+<tr>
+<td class='rowlabel'>Mean (SD)</td>
+<td>15.8 (8.90)</td>
+<td>15.8 (8.88)</td>
+<td>15.8 (8.86)</td>
+</tr>
+<tr>
+<td class='rowlabel lastrow'>Median [Min, Max]</td>
+<td class='lastrow'>16.0 [1.00, 31.0]</td>
+<td class='lastrow'>16.0 [1.00, 31.0]</td>
+<td class='lastrow'>16.0 [1.00, 31.0]</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+
+
+
+
+
+---
+## Pair plot
+
+For a fast birds-eye view, use `pairs()`.  You can call `pairs()` on your entire dataframe if you wish, but it is not usually very informative for categorical variables.
+
+
+```r
+pairs(airquality[, c("Ozone", "Solar.R", "Wind", "Temp")])
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-10-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+## Pair plot
+
+Let's change some plot options so we can see things a little better.
+
+
+```r
+palette(c("hotpink", "deepskyblue"))
+pairs(airquality[, c("Ozone", "Solar.R", "Wind", "Temp")], 
+      pch=20, col=airquality$season,
+      main="Summer (pink), Fall (blue)")
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-11-1.png)&lt;!-- --&gt;
+
+
+
+
+
+
+---
+## Plotting: `hist()`
+
+Histograms are used to visualize the distribution of quantitative variables.
+
+--
+
+Let's look at the distribution of `Wind`
+
+
+```r
+hist(airquality$Wind)
+lines(density(airquality$Wind))
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-12-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+## Plotting: `hist()`
+
+Be careful of how your bin width affects your plot.
+
+Here's the same histogram, with smaller bin width (changed using `breaks=` argument).
+
+
+```r
+hist(airquality$Wind, breaks=20)
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-13-1.png)&lt;!-- --&gt;
+
+
+
+
+---
+## Plotting: `hist()` and `density()`
+
+Setting `freq=FALSE` in `hist()` and adding a line for the density can help.
+
+
+```r
+hist(airquality$Wind, breaks=20, freq=FALSE)
+lines(density(airquality$Wind))
+```
+
+
+- `freq=FALSE` changes the y-axis to percentages of total observations rather than counts
+
+- `density()` performs a kernel density estimation (essentially a smoothed histogram)
+
+- `lines()` adds lines to the current plot
+
+
+
+
+
+---
+## Plotting: `hist()` and `density()`
+
+Setting `freq=FALSE` in `hist()` and adding a line for the density can help.
+
+
+```r
+hist(airquality$Wind, breaks=20, freq=FALSE)
+lines(density(airquality$Wind))
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-15-1.png)&lt;!-- --&gt;
+
+
+
+
+
+---
+## Plotting: modifying the plot
+
+
+```r
+hist(airquality$Wind, breaks=20, freq=FALSE,
+     main="", ylab="Density", xlab="Wind (mph)",
+     col="lightgrey")
+lines(density(airquality$Wind), 
+      col="hotpink", lwd=2)
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-16-1.png)&lt;!-- --&gt;
+
+
+
+
+
+
+---
+## Plotting: boxplots
+
+Like histograms, boxplots also display information about a variable's density.
+
+- Less detail, but more emphasis on numeric summary statistics (quartiles)
+
+Use `boxplot()` in R
+
+
+```r
+boxplot(airquality$Solar.R, horizontal=TRUE, xlab="Solar Rad. (lang)")
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-17-1.png)&lt;!-- --&gt;
+
+
+
+
+
+---
+## Plotting: grouped boxplots
+
+Used for 1 quantitative and 1 qualitative variable
+
+
+```r
+boxplot(airquality$Solar.R~airquality$season, ylab="Solar Rad. (lang)", xlab="Season")
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-18-1.png)&lt;!-- --&gt;
+
+
+
+---
+## Plotting: grouped boxplots
+
+Let's look at this against `Month`
+
+
+```r
+airquality$month_fac &lt;- factor(airquality$Month, levels=5:9,
+                  labels=c("May", "Jun", "Jul", "Aug", "Sep"))
+boxplot(airquality$Solar.R~airquality$month_fac, ylab="Solar Rad. (lang)", xlab="Month")
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-19-1.png)&lt;!-- --&gt;
+
+
+
+
+
+
+---
+## Plotting: Scatterplots
+
+- Used for 2 quantitative variables
+- Use `plot()`
+
+
+```r
+plot(airquality$Ozone~airquality$Wind)
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-20-1.png)&lt;!-- --&gt;
+
+
+
+
+
+---
+## Plotting: Scatterplots
+
+Let's make it prettier, use color to indicate factor levels, and add a legend.
+
+
+```r
+pal2 &lt;- c("hotpink", "deepskyblue")
+palette(pal2)
+plot(airquality$Ozone~airquality$Wind, col=airquality$season, pch=19, 
+     main="Ozone vs Wind",xlab="Wind (mph)", ylab="Ozone(ppb)")
+legend("topright", bty="n", pch=19, col=pal2,
+       legend=levels(airquality$season))
+```
+
+![](Session_1_introEDA_files/figure-html/unnamed-chunk-21-1.png)&lt;!-- --&gt;
+
+
+
+
+
+
+
+---
+## NEXT:
+
+- Exercises 1 during break; review afterwards
+- Next sessions will be about ggplot2
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

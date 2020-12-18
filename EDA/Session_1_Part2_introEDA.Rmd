@@ -1,0 +1,532 @@
+---
+title: "Intro to R and Data Visualization with ggplot2: Session 1 part 2: intro EDA with R"
+subtitle: UCI Data Science Initiative
+date: "22 June, 2020"
+author: "Arnold Seong"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css:
+      - default
+      - default-fonts
+      - "https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css"
+      - xaringan-themer.css
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+---
+
+
+
+```{r setup, include=FALSE, message=F, echo=F, warning=F}
+library(xaringanthemer)
+style_mono_accent(base_color = "#3C989E")
+knitr::opts_chunk$set(cache=FALSE, 
+                      warning=FALSE, 
+                      message=FALSE, 
+                      echo=TRUE, 
+                      warning=FALSE, 
+                      error=FALSE)
+options(scipen=10)
+library(ggplot2)
+library(RColorBrewer)
+library(kableExtra)
+```
+
+layout: true
+
+<style>
+pre {
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+    margin: 1em 0px;
+    margin-top: 0.5em;
+    margin-right: 0px;
+    margin-bottom: 0em;
+    margin-left: 0px;
+}
+.remark-inline-code {
+  background: #F5F5F5; 
+}
+</style>
+
+
+
+
+---
+class: animated, fadeIn
+
+## Workshop info
++ We will be recording today's sessions for potential future use
+    + You may not want to activate video
+    + Please set your zoom to mute your audio until you would like to speak
+    + You can change your icon name by mousing over, clicking on the 3 dots
+    
++ Please ask questions during lectures & throughout the day!
+    + Use chat
+    + Raise hand (`Alt+Y`)
+    + Unmute yourself temporarily (hold `Spacebar`).
+
+
+
+
+
+
+
+---
+## Importance of EDA: Anscombe's quartet
+
+**Anscombe's quartet** is a famous set of four (x,y) pairings that illustrate the importance of plotting your data and EDA in general.
+
+- The most common numerical summaries (mean, standard deviation, correlation) are identical
+
+- The linear regression coefficients (regressing y on x) are also identical!
+
+--
+#### &nbsp;
+
+```{r, echo=F, warning=F, message=F}
+anscombe2 <- with(anscombe, data.frame(
+  x     = c(x1, x2, x3, x4),
+  y     = c(y1, y2, y3, y4),
+  set = gl(4, nrow(anscombe))
+))
+
+
+library(plyr)
+stats <- ddply(anscombe2, .(set), summarize, 
+  mean_x = mean(x),
+  mean_y = mean(y), 
+  sd_x = sd(x),
+  sd_y = sd(y),
+  corr_xy = cor(x, y), 
+  intercept = lm(y ~ x)$coefficients[1], 
+  x_effect = lm(y ~ x)$coefficients[2]
+)
+stats[,1] <- as.numeric(stats[,1])
+
+colnames(stats) <- c("set", 
+                     "mean(x)", 
+                     "mean(y)", 
+                     "sd(x)", 
+                     "sd(y)", 
+                     "cor(x,y)", 
+                     "intercept", 
+                     "x_effect")
+
+
+library(kableExtra)
+
+kable(round(stats, 4), caption = "Anscombe's Quartet, rounded to 4 decimals") %>%
+  kable_styling(bootstrap_options = c( "striped", full_width = F))
+```
+
+
+
+
+
+---
+## Anscombe's Quartet, plotted
+
+```{r, echo=F, warning=F, message=F}
+ggplot(anscombe2, aes(x, y)) +
+  geom_point(col="hotpink", size=2) +
+  facet_wrap(~ set)
+```
+
+
+
+
+---
+class: inverse
+## Session 2 Topics
+
+1. Basic data exploration
+  + Getting a sense of your data: summaries, tables
+  + Making your data useful: transformations
+  + plotting with base R
+
+
+
+# EDIT EDIT EDIT
+
+
+
+---
+## Intro: basic EDA
+
+There is no set process for Exploratory Data Analysis, though there are some guiding principles.
+
+In this portion of the workshop, we'll cover a few things that are almost always good starting points
+
+  - We'll use a commonly-used dataset that comes loaded with R, the `airquality` dataset.
+  
+  - Our EDA process will become more complex and specific to our NYTimes dataset in the next portions of the workshop.
+
+
+
+
+---
+## EDA goals:
+
+In general, there are 2 main goals of EDA:
+
+1. Assess the structure and quality of your data
+  
+1. Investigate patterns
+
+--
+
+  - variation in 1 variable
+
+--
+  
+  - covariation between variables
+  
+
+
+
+
+
+
+---
+## Basic EDA: `str()`
+
+A good place to start is knowing something about your dataset!
+
+  - First, look at the help file for `airquality` by typing `?airquality`
+
+After that, try out `str()`, which explains the internal structure of an object.
+
+--
+
+```{r}
+str(airquality)
+```
+
+--
+
+- What do you notice?
+
+--
+
+- you'll use this more in the exercises!
+
+
+
+
+
+---
+## Basic EDA: `Month` into factor
+
+For illustrative purposes, since we don't have any categorical variables here, let's make a factor.  We'll split the months into "Summer" and "Fall"
+
+- "Summer" will correspond to `Month` values 5, 6, 7
+
+- "Fall" will correspond to `Month` values 8, 9
+
+--
+
+```{r}
+airquality$season <- factor(airquality$Month, levels=5:9,
+    labels=c("Summer", "Summer", "Summer", "Fall", "Fall"))
+```
+
+
+
+
+
+---
+## Basic EDA: `summary()`
+A quick first step in any data analysis is to generate what are commonly known as 5-number summaries.  
+- You can do this (well, a 6-number version) quickly in R using `summary()`
+
+```{r}
+summary(airquality)
+```
+
+
+
+
+---
+## Basic EDA: `summary()`
+```{r, echo=F}
+summary(airquality)
+```
+
+- For quantitative variables, this gives you a rough sense of the range of your variables, skewness, and presence of extreme observations / data entry errors.
+
+- For qualitative variables, you can see how balanced your dataset is
+
+
+
+
+
+---
+## Did you notice the missingness?
+
+Assessing the amount of missingness in data is crucial, and should be one of your first steps.  
+
+--
+
+- If you didn't see it in the `summary()` slide, here's a different way to see it quickly:
+
+```{r}
+apply(airquality, 2, function(x) sum(is.na(x)))
+```
+
+--
+
+We see that the missingness is concentrated in `Ozone` and `Solar.R`.  This might be problematic.
+
+--
+
+- The best way to tell if missingness will be problematic is to **hire a statistician** (non-ignorable missingness will bias your results!)
+
+--
+
+- We also know that there are `r nrow(airquality)` observations total.  That's a high rate of missingness in `Ozone` and likely to pose problems.
+
+
+
+
+
+
+
+---
+## Basic EDA: Table 1
+
+In many disciplines, the first table in a paper is a description of population characteristics, broken down (stratified) by a categorical variable of interest.  
+
+--
+
+- Let's pretend we're interested in `season` 
+
+--
+
+- we could make several subsets of our data and use `summary()` and format it and...
+
+--
+
+
+... Or we could use a package.  Turns out there are table-1-generating functions in many packages.  The package `table1` seems pretty good.
+
+```{r, eval=F}
+install.packages("table1")
+```
+
+
+
+
+---
+## Basic EDA: Table 1
+
+
+```{r, warning=F, message=F}
+library(table1)
+table1(~Ozone + Solar.R + Wind + Temp + Day | season, data=airquality)
+```
+
+
+
+
+
+
+---
+## Pair plot
+
+For a fast birds-eye view, use `pairs()`.  You can call `pairs()` on your entire dataframe if you wish, but it is not usually very informative for categorical variables.
+
+```{r, fig.width=7, fig.height=5}
+pairs(airquality[, c("Ozone", "Solar.R", "Wind", "Temp")])
+```
+
+
+
+
+---
+## Pair plot
+
+Let's change some plot options so we can see things a little better.
+
+```{r, fig.width=7, fig.height=5}
+palette(c("hotpink", "deepskyblue"))
+pairs(airquality[, c("Ozone", "Solar.R", "Wind", "Temp")], 
+      pch=20, col=airquality$season,
+      main="Summer (pink), Fall (blue)")
+```
+
+
+
+
+
+
+---
+## Plotting: `hist()`
+
+Histograms are used to visualize the distribution of quantitative variables.
+
+--
+
+Let's look at the distribution of `Wind`
+
+```{r, fig.width=7, fig.height=5}
+hist(airquality$Wind)
+lines(density(airquality$Wind))
+```
+
+
+
+
+---
+## Plotting: `hist()`
+
+Be careful of how your bin width affects your plot.
+
+Here's the same histogram, with smaller bin width (changed using `breaks=` argument).
+
+```{r, fig.width=7, fig.height=5}
+hist(airquality$Wind, breaks=20)
+```
+
+
+
+
+---
+## Plotting: `hist()` and `density()`
+
+Setting `freq=FALSE` in `hist()` and adding a line for the density can help.
+
+```{r, eval=F}
+hist(airquality$Wind, breaks=20, freq=FALSE)
+lines(density(airquality$Wind))
+```
+
+
+- `freq=FALSE` changes the y-axis to percentages of total observations rather than counts
+
+- `density()` performs a kernel density estimation (essentially a smoothed histogram)
+
+- `lines()` adds lines to the current plot
+
+
+
+
+
+---
+## Plotting: `hist()` and `density()`
+
+Setting `freq=FALSE` in `hist()` and adding a line for the density can help.
+
+```{r, fig.width=7, fig.height=5}
+hist(airquality$Wind, breaks=20, freq=FALSE)
+lines(density(airquality$Wind))
+```
+
+
+
+
+
+---
+## Plotting: modifying the plot
+
+```{r, fig.width=7, fig.height=5}
+hist(airquality$Wind, breaks=20, freq=FALSE,
+     main="", ylab="Density", xlab="Wind (mph)",
+     col="lightgrey")
+lines(density(airquality$Wind), 
+      col="hotpink", lwd=2)
+```
+
+
+
+
+
+
+---
+## Plotting: boxplots
+
+Like histograms, boxplots also display information about a variable's density.
+
+- Less detail, but more emphasis on numeric summary statistics (quartiles)
+
+Use `boxplot()` in R
+
+```{r, fig.width=7, fig.height=5}
+boxplot(airquality$Solar.R, horizontal=TRUE, xlab="Solar Rad. (lang)")
+```
+
+
+
+
+
+---
+## Plotting: grouped boxplots
+
+Used for 1 quantitative and 1 qualitative variable
+
+```{r, fig.width=7, fig.height=5}
+boxplot(airquality$Solar.R~airquality$season, ylab="Solar Rad. (lang)", xlab="Season")
+```
+
+
+
+---
+## Plotting: grouped boxplots
+
+Let's look at this against `Month`
+
+```{r, fig.width=7, fig.height=5}
+airquality$month_fac <- factor(airquality$Month, levels=5:9,
+                  labels=c("May", "Jun", "Jul", "Aug", "Sep"))
+boxplot(airquality$Solar.R~airquality$month_fac, ylab="Solar Rad. (lang)", xlab="Month")
+```
+
+
+
+
+
+
+---
+## Plotting: Scatterplots
+
+- Used for 2 quantitative variables
+- Use `plot()`
+
+```{r, fig.width=7, fig.height=5}
+plot(airquality$Ozone~airquality$Wind)
+```
+
+
+
+
+
+---
+## Plotting: Scatterplots
+
+Let's make it prettier, use color to indicate factor levels, and add a legend.
+
+```{r, fig.width=6, fig.height=4}
+pal2 <- c("hotpink", "deepskyblue")
+palette(pal2)
+plot(airquality$Ozone~airquality$Wind, col=airquality$season, pch=19, 
+     main="Ozone vs Wind",xlab="Wind (mph)", ylab="Ozone(ppb)")
+legend("topright", bty="n", pch=19, col=pal2,
+       legend=levels(airquality$season))
+
+```
+
+
+
+
+
+
+
+---
+## NEXT:
+
+- Exercises 1 during break; review afterwards
+- Next sessions will be about ggplot2
+

@@ -1,0 +1,3006 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Intro to R and Data Visualization with ggplot2: Session 1</title>
+    <meta charset="utf-8" />
+    <meta name="date" content="2020-06-22" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default-fonts.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https:\\cdnjs.cloudflare.com\ajax\libs\animate.css\3.7.0\animate.min.css" type="text/css" />
+    <link rel="stylesheet" href="xaringan-themer.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Intro to R and Data Visualization with ggplot2: Session 1
+## UCI Data Science Initiative
+### 22 June 2020
+
+---
+
+
+
+
+
+
+layout: true
+
+&lt;style&gt;
+pre {
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+    margin: 1em 0px;
+    margin-top: 0.5em;
+    margin-right: 0px;
+    margin-bottom: 0em;
+    margin-left: 0px;
+}
+.remark-inline-code {
+  background: #F5F5F5; 
+}
+&lt;/style&gt;
+
+
+
+
+---
+
+
+class: animated, fadeIn
+
+## Workshop info
++ We will be recording today's sessions for potential future use
+    + You may not want to activate video
+    + Please set your zoom to mute your audio until you would like to speak
+    + You can change your icon name by mousing over, clicking on the 3 dots
+    
++ Please ask questions during lectures &amp; throughout the day!
+    + Use chat
+    + Raise hand (`Alt+Y`)
+    + Unmute yourself temporarily (hold `Spacebar`).
+
+
+&lt;!-- + To access course materials please visit the [IDA-with-R website](https://ucidatascienceinitiative.github.io/IDA-with-R/). --&gt;
+&lt;!-- + **Please [download](https://github.com/UCIDataScienceInitiative/IDA-with-R/archive/master.zip) &amp; unzip the Github repository!** --&gt;
+
+
+
+
+
+---
+## Warning!
+We will be using the New York Times' COVID-19 dataset throughout this workshop (still being updated at the time these slides were made).
+
+--
+
+Some of you may be conducting research on COVID-19.  I think the risk is exceedingly small, but a warning about the potential for data spoilage is still in order, especially since this data is about a one-time, non-replicable event.
+
+--
+
++ Doing EDA on a dataset that you are also planning to use for inference / hypothesis tests *is* good practice, but can pose [**serious problems**](https://en.wikipedia.org/wiki/Data_dredging) if done improperly.
+    + EDA affecting your hypotheses = very bad
+
+--
+
++ However:
+    1. the EDA / visualizations we will do here are either quite general or already widely available / disseminated 
+        (i.e. at the [**New York Times**](https://www.nytimes.com/interactive/2020/us/coronavirus-us-cases.html)
+        or [**JHU**](https://coronavirus.jhu.edu/map.html));
+    1. we will not conduct any statistical tests;
+    1. the data we use is fairly limited (date, county, and number cases/deaths).
+
+
+
+
+
+---
+## Workshop Goals
+
+Primary goal: Using R and ggplot2 to accomplish common tasks related to data exploration and visualization
++ Coding in R to explore data and manipulate data into useful forms
++ ggplot2 basics + some customization 
++ Share some practical/workflow tips
+    
+Caveats:    
++ This workshop assumes a little familiarity with R
++ Not comprehensive
++ Tidy-ish only
++ This workshop is not about statistics, but basic statistical knowledge is assumed
+
+
+    &lt;!-- + Hopefully you leave with a sense of what you can do with R and ggplot2, and how to figure out how to do what you want later on. --&gt;
+    &lt;!-- + some things I do may be idiosyncratic and not best practices!! --&gt;
+    &lt;!-- + Note on people conducting COVID-19 research --&gt;
+
+ 
+
+---
+class: inverse
+## Session 1 Topics
+
+1. R and Rstudio basics (credit to Chris Galbraith, Emily Smith)
+  + R fundamentals: data types, data structures, reading data, subsetting
+  + Using R: functions, loops, writing data
+
+2. Basic data exploration
+  + Getting a sense of your data: summaries, tables
+  + Making your data useful: transformations
+  + plotting with base R
+
+
+
+
+
+---
+class: inverse, animated, fadeIn
+## Session 1 Topics
+
+1. R and Rstudio basics (credit to Chris Galbraith, Emily Smith)
+  + R fundamentals: data types, data structures, reading data, subsetting
+  + **Using R: functions, loops, writing data**
+
+2. **Basic data exploration**
+  + **Getting a sense of your data: summaries, tables**
+  + **Making your data useful: transformations**
+  + **plotting with base R**
+
+
+
+
+
+
+---
+## What is R?
++ R is a free software environment for statistical computing and graphics
+    + See http://www.r-project.org/ for more info 
++ R compiles and runs on a wide variety of UNIX platforms, Windows and Mac OS
++ R is open-source and free
++ R is fundamentally a command-driven system
++ R is an object-oriented programming language 
+    + Everything in R is an object (data, functions, etc.)
++ R is highly extendable
+    + You can write your own custom functions
+    + There are over 11,000 free add-on packages
+
+
+
+
+
+---
+## RStudio
++ RStudio is a free and open source integrated development environment (IDE) for R.
++ Visit http://rstudio.org/ for more info
++ Please note that you must have R already installed before installing R Studio!
+
+
+
+
+
+
+---
+## RStudio Tips/Features
++ In the script pane, use `Ctrl + Enter` or `Alt + Enter` to execute current line(s) or selection
+    + in RGui, `Ctrl + R` does the same thing
+    
++ In the console, Up/Down arrow keys scroll through last executed lines of code
+
++ Customizable interface
+
++ Code completion
+    + basic error detection
+    + can include own code snippets
+
++ Tearout panes (but save-as and set working directory can be finicky)
+
++ Multicursor!  (`Alt + Ctrl + Arrow keys`)
+
+
+&lt;!-- MAKE A BASIC SCRIPT TO SHOW IN VIDEO --&gt;
+
+
+
+
+---
+## Fundamentals of R
++ When you execute commands / lines of code
+    + R tries to interpret what you've asked it to do (evaluation)
+    + If it understands what you've written, it does it (execution)
+    + If it doesn't, it will likely give you an error or a warning
+
++ Some commands trigger R to print to the screen, others don't
+
++ If you type an incomplete command, R will usually respond by changing the command prompt to the '+' character
+    + Hit ESC on a MAC to cancel
+    + Type `Ctrl + C` on Windows and Linux to cancel
+
+
+
+
+
+---
+## Functions in R
+
+More on functions later, but for now: 
+
+1. R has many built-in functions
+
+2. Each function has a name followed by (), e.g., `mean()`
+
+3. Arguments of a function are put within the parentheses
+
+4. Help files are available for each function by typing ? followed by the function name, e.g., `?mean`
+
+5. We will be using functions throughout the workshop
+
+
+
+
+---
+## Data Types in R
+
++ R has 5 main atomic data types:
+
+  + Numeric:   &amp;nbsp; `5`,    &amp;nbsp; `1.3`, &amp;nbsp; `0.004294`
+  
+  + Character: &amp;nbsp; `"a"`,  &amp;nbsp; `"abracadabra"`, &amp;nbsp; `"two"`
+  
+  + Logical:   &amp;nbsp; `TRUE`, &amp;nbsp; `FALSE`
+  
+  + Integer:   &amp;nbsp; `2L`
+  
+  + Complex:   &amp;nbsp; `1+4i`
+
+
+
+
+---
+## Data Structures in R
+
+1. One-dimensional:
+    + Vectors
+    
+2. Multi-dimensional:
+    + Matrices/Arrays
+    + Lists
+    + Data frames
+
+&amp;nbsp;
+
++ Everything in R is an object
+
++ Objects can have attributes and methods associated with object types
+    + attributes include names, dimension, length
+    + methods = specific way a function handles an object type
+
+
+
+
+---
+## Vectors in R
++ Most basic object in R
++ One-dimensional
++ Length = # elements in vector
++ Each element is a single value (e.g. numeric or string value)
+    + In general, vectors can only hold ONE data type
+  
+
+```r
+numVec &lt;- c(2,3,4)  # &lt;- is the assigning operator
+numVec
+```
+
+```
+## [1] 2 3 4
+```
+
+```r
+length(numVec)  # gives the number of elements in the vector
+```
+
+```
+## [1] 3
+```
+
+```r
+x &lt;- 2
+is.vector(x)  # single numbers are stored as vectors of length 1
+```
+
+```
+## [1] TRUE
+```
+
+
+
+
+
+
+---
+## Examples of Character and Logical Vectors
+
+
+```r
+logVec &lt;- c(TRUE, FALSE, FALSE, T, F)
+logVec
+```
+
+```
+## [1]  TRUE FALSE FALSE  TRUE FALSE
+```
+--
+
+```r
+charVec &lt;- c("red", "green", "blue")
+charVec
+```
+
+```
+## [1] "red"   "green" "blue"
+```
+--
+
+```r
+logVec2 &lt;- charVec=="red"
+logVec2
+```
+
+```
+## [1]  TRUE FALSE FALSE
+```
+--
+
+```r
+charVec2 &lt;- c("green", "red", "blue")
+charVec2 == charVec
+```
+
+```
+## [1] FALSE FALSE  TRUE
+```
+
+
+
+
+
+
+---
+## Logical Operators
+
+In the previous slide, you saw two code chunks using `==`
+
+--
+
+(Here is one of them again)
+
+```r
+logVec2 &lt;- charVec=="red"
+logVec2
+```
+
+```
+## [1]  TRUE FALSE FALSE
+```
+
+--
+
+
+The double-equals sign `==` is a logical operator.
+
+  - A single equals sign `=` works (mostly) the same as `&lt;-` in R.  
+  
+--
+
+- `logVec2 &lt;- charVec=="red"` asks R to evaluate whether the value stored in the variable `charVec` is exactly equal to the string `"red"`.  
+
+--
+
+- As you saw, R tests each element in `charVec` and returns `TRUE` or `FALSE`
+
+
+
+
+
+---
+## Logical Operators cont'd
+
+Other logical operators: 
+
+--
+
+- numerical comparisons: &amp;nbsp; &amp;nbsp; `&gt;`, &amp;nbsp; &amp;nbsp; `&gt;=`, &amp;nbsp; &amp;nbsp; `&lt;`, &amp;nbsp; &amp;nbsp; `&lt;=`
+
+--
+
+- equals, not equals: &amp;nbsp; &amp;nbsp; `==`, &amp;nbsp; &amp;nbsp; `!=`
+
+--
+
+- not, and, or (and/or), strictly or: &amp;nbsp; &amp;nbsp; `!`, &amp;nbsp; &amp;nbsp; `&amp;`, &amp;nbsp; &amp;nbsp; `|` (pipe), &amp;nbsp; &amp;nbsp; `xor(x,y)`
+
+--
+
+#### &amp;nbsp; 
+
+Each of these will perform element-wise operations on vectors:
+
+
+```r
+x &lt;- 1:10
+y &lt;- 10:1
+x &gt; y
+```
+
+```
+##  [1] FALSE FALSE FALSE FALSE FALSE  TRUE  TRUE  TRUE  TRUE  TRUE
+```
+
+
+
+---
+class: animated, fadeIn
+## Logical Operators cont'd
+
+Other logical operators: 
+
+- numerical comparisons: &amp;nbsp; &amp;nbsp; `&gt;`, &amp;nbsp; &amp;nbsp; `&gt;=`, &amp;nbsp; &amp;nbsp; `&lt;`, &amp;nbsp; &amp;nbsp; `&lt;=`
+
+- equals, not equals: &amp;nbsp; &amp;nbsp; `==`, &amp;nbsp; &amp;nbsp; `!=`
+
+- not, and, or (and/or), strictly or: &amp;nbsp; &amp;nbsp; `!`, &amp;nbsp; &amp;nbsp; `&amp;`, &amp;nbsp; &amp;nbsp; `|` (pipe), &amp;nbsp; &amp;nbsp; `xor(x,y)`
+
+--
+
+#### &amp;nbsp; 
+
+The operators in the last bullet`!`, `&amp;`, `|`, `xor(x,y)` take logical vectors as input:
+
+
+```r
+logVec
+```
+
+```
+## [1]  TRUE FALSE FALSE  TRUE FALSE
+```
+
+```r
+!logVec
+```
+
+```
+## [1] FALSE  TRUE  TRUE FALSE  TRUE
+```
+
+
+
+
+
+
+---
+## Data Type Coercion
+- In general, vectors CANNOT have mixed types of data
+
+- If you create a vector with more than one type of data, R will automatically coerce it to a single type
+
+
+```r
+numCharVec &lt;- c(3.14, pi, "pi")
+numCharVec                 
+```
+
+```
+## [1] "3.14"             "3.14159265358979" "pi"
+```
+
+--
+
+- Explicitly coerce objects from one type to another using the function `as()`
+  - Be careful about warnings; always check it became what you wanted!
+
+
+```r
+numVec &lt;- 1:10
+numToChar &lt;- as(numVec, "character")
+numToChar
+```
+
+```
+##  [1] "1"  "2"  "3"  "4"  "5"  "6"  "7"  "8"  "9"  "10"
+```
+
+--
+
+
+```r
+numToChar + 1
+```
+
+```
+## Error in numToChar + 1: non-numeric argument to binary operator
+```
+
+
+
+---
+## Factors
+- A factor is a vector object used to specify a discrete classification (categorical values or "levels")
+
+- Factors are stored as numbers + a table of levels.  Thus, they
+  - use less memory compared to character vectors
+  - comparisons may be faster compared to character vectors
+  - can be given clearer labels compared to numeric indicators
+  - factors can be purposefully given an order
+  
+- Factors are associated with specific methods (i.e. functions treat them in specific ways)
+
+
+
+
+
+---
+## Factors: example
+- Consider a vector `sex` representing males as 0 and females as 1: 
+    
+
+```r
+sex &lt;- rep(c(0,1), times = 4)
+sex
+```
+
+```
+## [1] 0 1 0 1 0 1 0 1
+```
+
+--
+- **Will anyone else know what this means?!**
+
+--
+#### &amp;nbsp;
+- Instead, let's recode this as a factor with clear labels:
+
+
+```r
+sex2 &lt;- factor(sex, levels=c(0,1),  # original values
+              labels=c("Male", "Female")) # new values
+sex2
+```
+
+```
+## [1] Male   Female Male   Female Male   Female Male   Female
+## Levels: Male Female
+```
+
+
+
+
+
+---
+## Factors: re-levelling
+
+Nice for inconsistent data
+
+```r
+sex &lt;- factor(c("Male", "Female", "M", "F", "Dude", "F", "Male", "Dudette"))
+sex
+```
+
+```
+## [1] Male    Female  M       F       Dude    F       Male    Dudette
+## Levels: Dude Dudette F Female M Male
+```
+
+--
+
+
+```r
+sex &lt;- factor(sex, levels=c("Dude", "Dudette", "F", "Female", "M", "Male"),
+              labels=c("Male", "Female", "Female", "Female", "Male", "Male"))
+sex
+```
+
+```
+## [1] Male   Female Male   Female Male   Female Male   Female
+## Levels: Male Female
+```
+
+
+
+
+
+
+
+
+---
+## Factors: level order 1
+- By default levels are ordered alphabetically:
+
+
+```r
+sizes &lt;- factor(c("small", "med", "large"))
+sizes      # levels ordered alphabetically
+```
+
+```
+## [1] small med   large
+## Levels: large med small
+```
+
+--
+#### &amp;nbsp;
+- Levels can be specified explicitly to change order
+
+
+```r
+sizes_ord &lt;- factor(sizes, levels=c("small", "med", "large"))
+sizes_ord # same values, but levels are in the specified order
+```
+
+```
+## [1] small med   large
+## Levels: small med large
+```
+
+???
+&lt;!-- comments --&gt;
+spending time on this b/c factor order changes how ggplot2 displays legends
+
+
+
+
+
+
+---
+class: animated, fadeIn
+## Factors: level order 2
+
+- As mentioned, levels have assigned numbers:
+
+```r
+sizes &lt;- factor(c("small", "med", "large"))
+sizes
+```
+
+```
+## [1] small med   large
+## Levels: large med small
+```
+
+--
+#### &amp;nbsp;
+- Level order matters to assigned numbers:
+
+--
+
+
+```r
+as.numeric(sizes)  # levels ordered alphabetically (default)
+```
+
+```
+## [1] 3 2 1
+```
+
+--
+
+
+```r
+as.numeric(sizes_ord)  # levels ordered by small to large sizes
+```
+
+```
+## [1] 1 2 3
+```
+
+
+
+
+
+
+---
+class: animated, fadeIn
+## Factors: level order 2
+
+- As mentioned, levels have assigned numbers:
+
+```r
+sizes &lt;- factor(c("small", "med", "large"))
+sizes
+```
+
+```
+## [1] small med   large
+## Levels: large med small
+```
+
+--
+#### &amp;nbsp;
+- But level number doesn't change the values in the vector
+
+
+```r
+as.numeric(sizes)==as.numeric(sizes_ord)
+```
+
+```
+## [1] FALSE  TRUE FALSE
+```
+
+```r
+sizes==sizes_ord
+```
+
+```
+## [1] TRUE TRUE TRUE
+```
+
+
+
+
+
+
+
+---
+## Matrices
+A matrix is a special case of a vector (matrices have 2 dimensions)
+  + Like vectors, all elements of a matrix should be of the same data type
+
+
+```r
+myMat &lt;- matrix(NA, nrow = 2, ncol = 4)
+myMat
+```
+
+```
+##      [,1] [,2] [,3] [,4]
+## [1,]   NA   NA   NA   NA
+## [2,]   NA   NA   NA   NA
+```
+
+--
+In addition to the `length()` function, we can use `dim()` with matrices:
+
+
+```r
+length(myMat)  # gives total # of elements (nrow times ncol)
+```
+
+```
+## [1] 8
+```
+
+```r
+dim(myMat)  # gives a length 2 vector (nrow, ncol)
+```
+
+```
+## [1] 2 4
+```
+
+
+
+
+
+
+---
+## Creating Matrices: using a vector
+We can fill a matrix using a vector (or function returning a vector)
+
+
+```r
+evens &lt;- seq(2, 16, 2)
+evens
+```
+
+```
+## [1]  2  4  6  8 10 12 14 16
+```
+
+
+#### &amp;nbsp;
+--
+
+By default, matrices are filled by column
+
+```r
+myMat &lt;- matrix(evens, nrow = 2, ncol = 4)
+myMat 
+```
+
+```
+##      [,1] [,2] [,3] [,4]
+## [1,]    2    6   10   14
+## [2,]    4    8   12   16
+```
+
+
+
+
+
+
+---
+class: animated, fadeIn
+## Creating Matrices: using a vector
+We can fill a matrix using a vector (or function returning a vector)
+
+
+```r
+evens &lt;- seq(2, 16, 2)
+evens
+```
+
+```
+## [1]  2  4  6  8 10 12 14 16
+```
+
+
+#### &amp;nbsp;
+But we can also fill the matrix by row 
+
+--
+
+
+```r
+myMat &lt;- matrix(evens, nrow = 2, ncol = 4, byrow=TRUE)
+myMat
+```
+
+```
+##      [,1] [,2] [,3] [,4]
+## [1,]    2    4    6    8
+## [2,]   10   12   14   16
+```
+
+
+
+
+---
+## Creating Matrices: `cbind()`
+`rbind()` and `cbind()` (row bind and column bind) combine vectors into a matrix 
+
+
+```r
+vec1 &lt;- 1:4
+vec2 &lt;- 5:8
+vec3 &lt;- 9:12
+```
+
+--
+#### &amp;nbsp;
+
+`cbind()` example:
+
+
+```r
+colMat &lt;- cbind(vec1, vec2, vec3)
+colMat
+```
+
+```
+##      vec1 vec2 vec3
+## [1,]    1    5    9
+## [2,]    2    6   10
+## [3,]    3    7   11
+## [4,]    4    8   12
+```
+
+--
+Notice the **columns** are named.
+
+
+
+
+
+
+---
+class: animated, fadeIn
+## Creating Matrices: `rbind()`
+
+`rbind()` and `cbind()` (row bind and column bind) combine vectors into a matrix 
+
+
+```r
+vec1 &lt;- 1:4
+vec2 &lt;- 5:8
+vec3 &lt;- 9:12
+```
+
+--
+#### &amp;nbsp;
+
+`rbind()` example:
+
+
+```r
+rowMat &lt;- rbind(vec1, vec2, vec3)
+rowMat
+```
+
+```
+##      [,1] [,2] [,3] [,4]
+## vec1    1    2    3    4
+## vec2    5    6    7    8
+## vec3    9   10   11   12
+```
+
+--
+Notice the **rows** are named.
+
+--
+You can extract or change the column and row names using `colnames()` and `rownames()` (or `dimnames()`)
+
+
+
+
+
+---
+## Arrays:
+
+Matrices are 2-dimensional **arrays**.
+
+Arrays can have an arbitrary number of dimensions.
+
+--
+
+#### &amp;nbsp;
+
+Here is one slice of a 3-dimensional array:
+
+
+```r
+myArr &lt;- array(1:5, dim=c(3, 4, 5))  # something fishy here?
+myArr[, , 1]
+```
+
+```
+##      [,1] [,2] [,3] [,4]
+## [1,]    1    4    2    5
+## [2,]    2    5    3    1
+## [3,]    3    1    4    2
+```
+
+--
+
+Providing names for the dimensions of an array -- use `dimnames()` -- will help you stay sane.  
+
+
+
+
+
+
+---
+## Lists
+Unlike vectors, matrices, or arrays, **lists** can contain multiple data types and data structures.
+
+
+```r
+myList &lt;- list("sex"=sex, 
+               "rowMat"=rowMat)
+length(myList)
+```
+
+```
+## [1] 2
+```
+
+```r
+myList
+```
+
+```
+## $sex
+## [1] Male   Female Male   Female Male   Female Male   Female
+## Levels: Male Female
+## 
+## $rowMat
+##      [,1] [,2] [,3] [,4]
+## vec1    1    2    3    4
+## vec2    5    6    7    8
+## vec3    9   10   11   12
+```
+
+
+
+
+
+
+
+
+---
+## Special Values
+There are some special values in R:
+
+  + `Inf`: infinity
+  + `NaN`: "Not a number"
+  
+
+```r
+a &lt;- Inf
+b &lt;- 0
+rslt &lt;- c(b/a, a/a, 1/b)
+rslt
+```
+
+```
+## [1]   0 NaN Inf
+```
+
+
+
+
+
+---
+## Missing Values
++ There are two kinds of missing values in R:
+    + `NaN`: stands for "Not a Number" and is a missing value produced by numerical computation
+    + `NA`: stands for "Not Available" and is used when a value is missing
+
+```r
+a &lt;- c(1,2)
+a[3]
+```
+
+```
+## [1] NA
+```
+
+```r
+b &lt;- 0/0
+b
+```
+
+```
+## [1] NaN
+```
+
+
+
+
+---
+## Missing Values, contd.
++ `is.na()` and `is.nan()` are functions that indicate which value(s) of an object are missing
++ `NaN` is also considered as `NA` (the reverse is NOT true)
+
+
+```r
+vec &lt;- c(1, NA, 3, NaN, NA, 5, NaN)
+is.na(vec)  # look at elements 4 and 5
+```
+
+```
+## [1] FALSE  TRUE FALSE  TRUE  TRUE FALSE  TRUE
+```
+
+```r
+is.nan(vec) # compare
+```
+
+```
+## [1] FALSE FALSE FALSE  TRUE FALSE FALSE  TRUE
+```
+
+
+
+
+
+---
+## Data Frames
+Data frames are uniquely useful objects for data analysis!
++ A data frame looks very similar to a matrix, but...
+
+--
+
++ **different columns** in a data frame can house **different data types**
+
+--
+
+
+```r
+female &lt;- rep(c(0,1), times = 4)
+height &lt;- sample(62:70, length(female))
+df &lt;- data.frame(female, sex, height)
+df
+```
+
+```
+##   female    sex height
+## 1      0   Male     65
+## 2      1 Female     68
+## 3      0   Male     67
+## 4      1 Female     70
+## 5      0   Male     66
+## 6      1 Female     62
+## 7      0   Male     63
+## 8      1 Female     69
+```
+
+--
+
+Data frames combine features of lists and matrices
+
+
+
+
+
+---
+## Reading Data into R
+
+Main functions for reading data into R:
+
+1. `read.table()`, `read.csv()`: to read tabular data 
+    + Type `?read.table` in your R console to see the important arguments in the function
+    + `read.csv()` for comma separated value files 
+        + Equivalent to `read.table()` with arguments `sep = ","` and `header = TRUE`
+
+2. `readLines()`: to read lines of a text file
+
+3. `source()`, `dget()`: to read R code
+
+4. `load()`: to read saved workspaces and R data files (`.Rda`, `.Rdata`)
+
+
+
+
+
+---
+## Reading Data into R, contd.
+Sometimes the hardest part of reading data into R is pointing R to the data.  
+
+--
+
++ If your data is stored locally, I recommend that you  
+  + Make a folder (e.g. `myproj`) to keep all files for your data analysis project
+  + Save your main script in `myproj`
+  + Save your data in another folder `myproj/data`  
+
+
+--
+
++ Then, in R:  
+    + Use `setwd("path_to_myproj/myproj")` to set your working directory to that folder
+    + Alternatively, use RStudio's top banner menu: 
+        + Session `\(\rightarrow\)` Set Working Directory `\(\rightarrow\)` Source File Location
+    + Then use `read.csv("data/data_file.csv")`
+    
+--
+
+We will use data hosted online here (to get the most up-to-date data), but I still recommend keeping your data analysis project files together.
+
+
+
+
+
+
+---
+## NYTimes Covid-19 data
+Today we will be using the New York Times' Covid-19 dataset at [https://github.com/nytimes/covid-19-data](https://github.com/nytimes/covid-19-data), and augmenting it with a few other sources of information as we continue through our data exploration.  
+
+--
+
+The original dataset contains the following variables:
+
++ `date`:   &amp;nbsp;       date of observation
++ `county`: &amp;nbsp;       county
++ `state`:  &amp;nbsp;       state
++ `fips`:   &amp;nbsp;       Federal Information Processing Standards codes (unique identifiers for counties)
++ `cases`:  &amp;nbsp;       cumulative cases in county on given date
++ `deaths`: &amp;nbsp;       cumulative deaths
+
+--
+
+Let's load the data.
+
+
+```r
+ct &lt;- read.csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
+```
+
+
+
+
+
+---
+## NYTimes Covid-19 data: head
+
+Now that we have a data frame loaded, let's take a quick look at the 'head' of the data.
++ The `head()` function by default, displays the first 6 rows.
+
+--
+
+
+```r
+head(ct)
+```
+
+```
+##         date    county      state  fips cases deaths
+## 1 2020-01-21 Snohomish Washington 53061     1      0
+## 2 2020-01-22 Snohomish Washington 53061     1      0
+## 3 2020-01-23 Snohomish Washington 53061     1      0
+## 4 2020-01-24      Cook   Illinois 17031     1      0
+## 5 2020-01-24 Snohomish Washington 53061     1      0
+## 6 2020-01-25    Orange California  6059     1      0
+```
+
+--
+Let's look at this for a moment to see what we see...
+
+
+
+
+
+---
+## NYTimes Covid-19 data: tail
+There's also a `tail()` function.
+
+--
+
+
+```r
+tail(ct, 5)  # specify just the last 5 rows
+```
+
+```
+##              date     county   state  fips cases deaths
+## 242823 2020-06-16 Sweetwater Wyoming 56037    40      0
+## 242824 2020-06-16      Teton Wyoming 56039   105      1
+## 242825 2020-06-16      Uinta Wyoming 56041    91      0
+## 242826 2020-06-16   Washakie Wyoming 56043    38      3
+## 242827 2020-06-16     Weston Wyoming 56045     1      0
+```
+
+--
+
+After looking at the head and tail, 
+--
+what are some things you can tell about the dataset?
+
+--
+
+- number of rows, date range (possible), ordering of dataset, formatting of variables
+
+--
+- each row = observation of 1 county on 1 day (i.e. "long" format)
+
+--
+- does not seem like every county is present every day
+
+--
+- appears to be mostly low numbers in `cases` and mostly 0's in `deaths`
+
+
+
+
+---
+class: animated, fadeIn
+## NYTimes Covid-19 data: tail
+There's also a `tail()` function.
+
+
+```r
+tail(ct, 5)  # specify just the last 5 rows
+```
+
+```
+##              date     county   state  fips cases deaths
+## 242823 2020-06-16 Sweetwater Wyoming 56037    40      0
+## 242824 2020-06-16      Teton Wyoming 56039   105      1
+## 242825 2020-06-16      Uinta Wyoming 56041    91      0
+## 242826 2020-06-16   Washakie Wyoming 56043    38      3
+## 242827 2020-06-16     Weston Wyoming 56045     1      0
+```
+
+After looking at the head and tail, 
+--
+what are some questions you have about the dataset?  What do you want to confirm about the dataset?
+
+--
+
+- confirm date range, every county not recorded every day
+
+--
+- data from all counties? All states? US territories included?
+
+--
+
+Before we can do this, we need to discuss **subsetting**
+
+
+
+
+
+
+---
+## Subsetting
+
+Two main subsetting operators:
+- `[ ]` single brackets return an object of the same class as the original object
+
+- `$` used primarily for selecting columns from data frames
+
+  - We use `$` when selecting an attribute by name
+
+#### &amp;nbsp;
+
+--
+
+- `[ ]` allows us to select more than one element 
+
+- `$` allows us to select only one
+
+#### &amp;nbsp;
+
+--
+
+(There's also `[[ ]]`, which is most commonly used to subset lists)
+
+
+
+
+
+
+---
+## Subsetting Vectors
+
+
+```r
+vec &lt;- 1:10    # integers from 1 to 10
+vec &lt;- vec*10  # multiply each element in vec by 10
+vec[3]         # predict output
+```
+--
+
+```
+## [1] 30
+```
+--
+Remember that single brackets allow us to select more than one element of an object:
+
+```r
+vec[1:3]        # predict output
+```
+--
+
+```
+## [1] 10 20 30
+```
+--
+
+```r
+vec[c(2,4,6)]   # predict output
+```
+--
+
+```
+## [1] 20 40 60
+```
+
+
+
+
+
+
+
+---
+## Subsetting Data Frames:
+We also use the single square brackets to subset data frames (2 dimensions!)
+--
+
+- In the square brackets, the first position refers to the row(s) and the second position refers to the column(s)
+- i.e. `df[row_num, col_num]`
+
+--
+
+
+```r
+ct[1:2, ]  # get the first 2 rows
+```
+
+```
+##         date    county      state  fips cases deaths
+## 1 2020-01-21 Snohomish Washington 53061     1      0
+## 2 2020-01-22 Snohomish Washington 53061     1      0
+```
+
+--
+
+
+```r
+ct[1, 2]   # get the element in the first row, second column
+```
+
+```
+## [1] Snohomish
+## 1787 Levels: Abbeville Acadia Accomack Ada Adair Adams Addison Aiken ... Ziebach
+```
+
+
+
+
+
+---
+## Subsetting Data Frames, contd.
+- We use `$` when selecting an attribute by name
+  - This is commonly used to subset a column of a data frame
+- Can combine `$` with `[ ]`. 
+
+--
+
+The following are all equivalent (`fips` is the 4th column):
+--
+
+```r
+head(ct$fips)  # select the first 6 values of the second column
+```
+
+```
+## [1] 53061 53061 53061 17031 53061  6059
+```
+--
+
+```r
+ct$fips[1:6]
+```
+
+```
+## [1] 53061 53061 53061 17031 53061  6059
+```
+--
+
+```r
+ct[1:6, 4]
+```
+
+```
+## [1] 53061 53061 53061 17031 53061  6059
+```
+
+
+
+
+
+
+---
+## Subsetting using Index Vectors
++ Another way to select more than one element from an object (vector, matrix, list, dataframe) is by using index vectors
+
++ We will cover three types of index vectors: 
+
+--
+
+  1. Logical index vector
+  
+--
+
+  1. Vector of positive integers
+
+--
+
+  1. Vector of character strings
+
+--
+
++ Can be longer than the vector being subsetted if repeating elements (except logical index vector) 
+
+
+```r
+vec[c(1, 1, 1)]  # predict output
+```
+--
+
+```
+## [1] 10 10 10
+```
+
+
+
+
+
+---
+## 1. Logical Index Vector
++ A vector of `TRUE`/`FALSE` values of same length as the vector to be subsetted.
+    + Values corresponding to TRUE in the index vector are selected
+
+--
+
+```r
+geq10k &lt;- ct$cases &gt;= 10000  # T/F returned 
+length(geq10k)
+```
+
+```
+## [1] 242827
+```
+--
+
+```r
+tail(geq10k)
+```
+
+```
+## [1] FALSE FALSE FALSE FALSE FALSE FALSE
+```
+
+```r
+tail(ct$cases)
+```
+
+```
+## [1]   3  40 105  91  38   1
+```
+--
+
+```r
+sum(geq10k) # Treats TRUE as 1 and FALSE as 0
+```
+
+```
+## [1] 1551
+```
+
+
+
+
+
+
+---
+## 1. Logical Index Vector, cont'd
+
+So we have 1551 observations of cumulative case counts greater than 10,000
+
+--
+
+Since 1551 entries may be too many to look at individually, we should figure out what we really want to know.
+
+--
+
+We might be interested in which counties these are, i.e. the unique counties marked as `cases &gt;= 10000`
+
+--
+
+```r
+unique(ct$county[geq10k])
+```
+
+```
+##  [1] New York City   Westchester     Nassau          Suffolk        
+##  [5] Cook            Wayne           Bergen          Los Angeles    
+##  [9] Essex           Hudson          Miami-Dade      Union          
+## [13] Philadelphia    Middlesex       Fairfield       Passaic        
+## [17] Rockland        Prince George's New Haven       Orange         
+## [21] Harris          Providence      Worcester       Montgomery     
+## [25] Fairfax         Hartford        Dallas          Marion         
+## [29] Maricopa        Oakland         Riverside       Hennepin       
+## 1787 Levels: Abbeville Acadia Accomack Ada Adair Adams Addison Aiken ... Ziebach
+```
+
+
+
+
+
+
+
+
+
+
+---
+## 2. Index Vector of Positive Integers
++ A vector of positive integers identifying elements you want to subset
++ We can use the function `which()` along with a logical test to create this index vector
+
+
+
+```r
+CA_geq5k &lt;- which(ct$state=="California" 
+                 &amp; ct$date=="2020-06-01"
+                 &amp; ct$cases &gt; 5000)
+CA_geq5k
+```
+
+```
+## [1] 194797 194807 194810 194813 194814
+```
+
+--
+
+
+```r
+ct[CA_geq5k, ]
+```
+
+```
+##              date         county      state fips cases deaths
+## 194797 2020-06-01    Los Angeles California 6037 55968   2384
+## 194807 2020-06-01         Orange California 6059  6532    147
+## 194810 2020-06-01      Riverside California 6065  7982    344
+## 194813 2020-06-01 San Bernardino California 6071  5355    204
+## 194814 2020-06-01      San Diego California 6073  7617    312
+```
+
+
+
+
+
+---
+## 3. Index Vector of Character Strings
++ If an object has a name attribute, we can take a subset of the vector by calling the names of the elements
+
+--
+
+.pull-left[
+
++ For example, we can use this to take a subset of the columns of the prestige data
+
+```r
+ct[1:5, c("county", "cases")]
+```
+
+```
+##      county cases
+## 1 Snohomish     1
+## 2 Snohomish     1
+## 3 Snohomish     1
+## 4      Cook     1
+## 5 Snohomish     1
+```
+]
+
+
+--
+
+.pull-right[
+
++ Same as subsetting by column number, but R looks up the column number for you
+
+```r
+ct[1:5, c(2,5)]
+```
+
+```
+##      county cases
+## 1 Snohomish     1
+## 2 Snohomish     1
+## 3 Snohomish     1
+## 4      Cook     1
+## 5 Snohomish     1
+```
+]
+
+
+
+
+
+---
+## Using Index Vectors to Sort Data Frames
+- We can use `order()` along with subsetting operators to sort a data frame by a specific column. 
+
+--
+
+- Let's subset to June 1st, put it in ascending order of `cases`, and look at the first (lowest) five
+
+--
+
+
+```r
+june1_inds &lt;- which(ct$date=="2020-06-01")
+sort_inds &lt;- order(ct$cases[june1_inds], decreasing=FALSE)
+```
+--
+
+```r
+ct[sort_inds[1:5],]
+```
+
+```
+##            date      county          state  fips cases deaths
+## 954  2020-03-09     Chatham North Carolina 37037     1      0
+## 1180 2020-03-11   San Mateo     California  6081    15      0
+## 2656 2020-03-15 Charles Mix   South Dakota 46023     1      0
+## 70   2020-02-04   Snohomish     Washington 53061     1      0
+## 71   2020-02-05    Maricopa        Arizona  4013     1      0
+```
+--
+
+What went wrong? 
+
+
+
+
+
+---
+## Understanding the problem
+
+Let's first understand how `order()` works.
+
+--
+
+- Consider a vector `x` as below
+
+```r
+x &lt;- c(4, 2, 1, 3, 5)
+```
+
+--
+
+- If you were to place the elements of `x` in ascending order, which element in `x` would come first? second?
+
+--
+
+#### &amp;nbsp;
+
+
+```r
+order(x)
+```
+
+```
+## [1] 3 2 4 1 5
+```
+
+--
+
+- Note: `order(x)` should have the same length as the vector it evaluates!
+
+
+
+
+---
+## Understanding the problem cont'd
+Back to our problem: We made `sort_inds` from the subsetted data ...
+
+
+```r
+june1_inds &lt;- which(ct$date=="2020-06-01")
+sort_inds &lt;- order(ct$cases[june1_inds], decreasing=FALSE)
+```
+--
+
+But then applied the order in `sort_inds` to the non-subsetted data.
+
+```r
+ct[sort_inds[1:5],]
+```
+
+--
+
+&amp;nbsp;
+
+To see why that is a problem more clearly:
+
+```r
+length(sort_inds)
+```
+
+```
+## [1] 2992
+```
+
+```r
+nrow(ct)
+```
+
+```
+## [1] 242827
+```
+
+
+
+
+---
+## Fixed:
+
+
+```r
+june1_inds &lt;- which(ct$date=="2020-06-01")
+ct_june1 &lt;- ct[june1_inds, ]  # create new subsetted df
+sort_inds &lt;- order(ct_june1$cases)
+ct_june1[sort_inds[1:5],]
+```
+
+--
+
+
+```
+##              date                 county    state fips cases deaths
+## 195555 2020-06-01                Unknown   Kansas   NA     0      6
+## 195781 2020-06-01                Unknown Maryland   NA     0     46
+## 197257 2020-06-01                Unknown     Utah   NA     0      4
+## 194671 2020-06-01    Bristol Bay Borough   Alaska 2060     1      0
+## 194672 2020-06-01 Dillingham Census Area   Alaska 2070     1      0
+```
+
+--
+
+#### &amp;nbsp;
+
+*Brief aside:* Anything concerning or weird here?
+
+
+
+---
+## A few other ways to subset
+
+A few other ways of subsetting can be pretty handy!
+
+--
+
+- `subset()`: more readable, but doesn't generate / save an index vector
+
+--
+
+```r
+subset(ct, ct$state=="California" 
+           &amp; ct$date=="2020-06-01"
+           &amp; ct$cases &gt; 5000)
+```
+
+--
+
+&amp;nbsp;
+
+- `dplyr` library: 
+  - major advantage: highly readable code
+  - less opportunity for error (or, at least, different opportunities!)
+  - also (not shown here) easy to perform operations on subgroups
+  
+--
+
+```r
+library(dplyr)
+ct %&gt;% 
+  filter(date=="2020-06-01") %&gt;%
+  arrange(cases, state, county) %&gt;%
+  slice(1:5)
+```
+
+
+
+
+---
+## Saving data: to load back into R
+
+Before we move on, let's save our data.
+
+To save (multiple) R objects into a file easily imported back into R, use `save()`.  (I find it useful to include a string vector listing the contents)
+
+--
+
+```r
+contents &lt;- c("ct", "ct_june1")
+save(contents, ct, ct_june1, file="data/session1.Rdata")
+```
+
+--
+
+*Note:* If you don't specify the full path in the `file=` argument, make sure you know what your current working directory is first!
+
+--
+
+- In addition to `getwd()`, `setwd()`, and the RStudio dropdown menus, you can also use the `here` package (not covered, um, here...)
+
+--
+
+There is also `save.image()` to save the entire workspace, but it is somewhat frowned upon
+
+
+
+
+
+---
+## Saving data: to load back into R
+Then when you want to load this data later, use
+
+
+```r
+load("data/session1.Rdata")
+```
+
+--
+
+You might have forgotten what is in there!  
+
+- If starting from an empty workspace, just look at the Environment pane in RStudio
+- Otherwise, that `contents` vector will be handy.
+
+--
+
+
+```r
+contents
+```
+
+```
+## [1] "ct"       "ct_june1"
+```
+
+
+
+
+
+
+---
+## Saving data: to share
+To save a matrix or dataframe to be shared, `.csv` format is usually preferred.  
+
+
+```r
+write.table(ct_june1,
+            file = "data/ct_june1.csv",
+            sep = ",",
+            col.names = TRUE,
+            row.names = FALSE)
+```
+
+--
+
+To load it later, just use
+
+```r
+read.csv("data/ct_june1.csv")
+```
+
+
+
+
+
+
+
+---
+class: inverse
+## Session 1 Topics
+
+1. R and Rstudio basics (credit to Chris Galbraith, Emily Smith)
+  + R fundamentals: data types, data structures, reading data, subsetting
+  + Using R: functions, loops, writing data
+
+2. Basic data exploration
+  + Getting a sense of your data: summaries, tables
+  + Making your data useful: transformations
+  + plotting with base R
+
+
+
+
+
+---
+class: inverse, animated, fadeIn
+## Session 1 Topics
+
+1. R and Rstudio basics (credit to Chris Galbraith, Emily Smith)
+  + **R fundamentals: data types, data structures, reading data, subsetting**
+  + Using R: functions, loops, writing data
+
+2. **Basic data exploration**
+  + **Getting a sense of your data: summaries, tables**
+  + **Making your data useful: transformations**
+  + **plotting with base R**
+
+
+
+
+
+
+
+
+---
+## Packages
+
++ R packages are a way to maintain collections of R functions and data sets
+
++ Packages allow for easy, transparent and cross-platform extension of the R base system
+
+
+
+
+---
+## Packages
+- Terminology:
+
+  - *Package*: an extension of the R base system with code, data and documentation in a standardized format
+  - *Library*: a directory containing installed packages
+  - *Repository*: a website providing packages for installation
+  - *Source*: the original version of a package with human-readable text and code
+  - *Base packages*: part of the R source tree, maintained by R Core
+
+- For more info on how R packages are developed, please read [Creating R Packages: A Tutorial](http://cran.r-project.org/doc/contrib/Leisch-CreatingPackages.pdf) by Friedrich Leisch.
+
+- Go to https://cran.r-project.org/web/packages/ for a list of all available packages.
+
+
+---
+## Installing Packages
+There are two main ways to install a package in R:
+
+1. Installing from CRAN: install a package directly from the repository
+    + Using R studio: `Tools &gt; Install Packages...`
+    + From R console: `install.packages("name_of_package")`
+    
+    
+2. Installing from source: first download the add-on R package and then type the following in your console:
+    + `install.packages("path_to_file", repos = NULL, type = "source")` 
+
+Once you install a package, you need to load it into R using the function `library()`
+
+
+
+
+
+---
+## Installing Packages, contd.
+
+Let's install the package `RColorBrewer`, which provides preset color palettes for use in plotting, and load it (we'll use it later).
+
+
+```r
+install.packages("RColorBrewer")  # put it in quotes!
+library(RColorBrewer)  # load it into your R workspace
+```
+
+
+
+
+
+
+---
+## Popular Packages
++ To visualize data:
+    + ```ggplot2```: to create beautiful graphics
+    + ```googleVis```: to use Google Chart tools
+    + ```plotly```: to create interactive graphs
+    
++ To report results:
+    + ```shiny```: to create interactive web-based apps
+    + ```knitr```: to combine R codes and Latex/Markdown codes
+    + ```rmarkdown```: to create documents (slides, pdfs, html, et cetera)
+    + ```slidify```: to build HTML 5 slide shows
+    
++ To write high-performance R code:
+    + ```rcpp```: to write R functions that call C++ code
+    + ```data.table```: to organize datasets for fast operations
+    + ```parallel```: to use parallel processing in R
+
+Many others; this list changes quickly.
+
+
+
+
+
+---
+## Functions in R
+
+- Consider the function `quantile()`
+- Type in `?quantile` to load the help file [(online version here)](https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/quantile)
+
+
+```r
+?quantile
+```
+
+
+- Can see that `quantile()` has 5 arguments: 
+
+  - `x`: numeric vector
+  - `probs`: the quantiles of interest
+  - `na.rm`: ignore `NA` values (logical)
+  - `names`: include quantile labels in output vector (logical)
+  - `type`: which of 9 quantile algorithms to use (integer 1:9)
+
+- Can also see that quantile() only requires 1 argument (defaults specified)
+
+---
+## Function help files
+
+
+Function help files
+
+1. specify which arguments have default values (and what those values are)
+
+--
+
+  - `quantile(x, probs = seq(0, 1, 0.25), na.rm = FALSE, names = TRUE, type = 7, ...)`
+  
+--
+
+1. describe the arguments taken by the function
+
+--
+
+1. provide usage examples (scroll to)
+
+--
+
+1. can still be clear as mud  
+
+
+
+
+---
+## Where to get help:
+
+Thankfully there is this thing called the "internet."  
+
+Google usually turns up one of the following, and in my experience these are usually the most helpful.
+
+- [stackoverflow](https://stackoverflow.com/questions/tagged/r) for R code
+- [Cross-Validated](https://stats.stackexchange.com/) for questions about statistics
+- [R-bloggers](https://www.r-bloggers.com/how-to-learn-r-2/) for tutorials
+
+--
+
+Especially for help with packages:
+- CRAN reference manuals and `browseVignettes()`
+
+
+
+
+
+
+
+---
+## Control Structures in R
+
+Before we continue to writing our own functions, we need to cover control structures and the `apply()` functions in R.
+
+--
+
+Control structures dictate the sequence in which lines of code are executed.  
+
+--
+#### &amp;nbsp;
+
+Most commonly we use `if` statements, and `for` and `while` loops.  
+
+
+
+
+---
+## Control Structures: if
+
+
+```r
+if (condition){
+  # do something
+} else if (condition2) {
+  # do something else
+} else {
+  # do this other catchall thing
+}
+```
+
+`if` statements branch your code depending on a logical test:
+
+- `condition` must be a vector of length 1
+
+--
+
+
+```r
+x &lt;- sample(1:5, size=1)
+if (x&lt;3){
+  print("less than 3")
+} else {
+  print("greater than / equal to 3")
+}
+```
+
+```
+## [1] "greater than / equal to 3"
+```
+
+
+
+
+
+---
+## Control Structures: ifelse
+
+```r
+ifelse(TF_vector, do_if_true, do_if_false)
+```
+
+- `ifelse` is a vectorized version of an if statement
+
+--
+
+#### &amp;nbsp;
+
+
+```r
+x &lt;- 1:5
+ifelse(x&lt;3, "small", "large")
+```
+
+```
+## [1] "small" "small" "large" "large" "large"
+```
+
+
+
+
+
+---
+## Control Structures: while 
+
+
+```r
+while (condition){
+  # do this over and over
+  # modify condition!
+}
+```
+
+
+A `while` loop repeats itself until its condition becomes false.  
+- make sure you have a way of exiting the loop!
+
+--
+
+```r
+x &lt;- 1
+while (x &lt; 5){
+  print(x)
+  x &lt;- x+1
+}
+```
+
+```
+## [1] 1
+## [1] 2
+## [1] 3
+## [1] 4
+```
+
+
+
+
+---
+## Control Structures: for 
+
+
+```r
+for (el in set){
+  #do something depending on el
+}
+```
+
+A `for` loop does something for each element in a set.
+
+--
+#### &amp;nbsp;
+
+
+```r
+x &lt;- c("a", "b", "c", "d")
+for (let in x){
+  print(let)
+}
+```
+
+```
+## [1] "a"
+## [1] "b"
+## [1] "c"
+## [1] "d"
+```
+
+
+
+---
+## Control Structures: for 
+
+For any marginally complex operation, using a set of indices is usually better:
+
+--
+
+I've randomly sampled 25 letters with replacement and placed them in a 5x5 matrix below.
+
+
+```
+##      [,1] [,2] [,3] [,4] [,5]
+## [1,] "i"  "g"  "q"  "y"  "n" 
+## [2,] "k"  "p"  "k"  "s"  "k" 
+## [3,] "y"  "c"  "c"  "p"  "l" 
+## [4,] "n"  "e"  "b"  "r"  "r" 
+## [5,] "g"  "m"  "r"  "i"  "r"
+```
+
+--
+
+Now let's take the elements directly above the diagonal (4 of them):
+
+--
+
+
+```r
+y &lt;- rep(NA, 4)  # pre-populate vector y
+for (i in 1:4){
+    y[i] &lt;- letter_mat[i, i+1]
+}
+print(y)
+```
+
+```
+## [1] "g" "k" "p" "r"
+```
+
+
+
+
+
+---
+## apply() family
+Learning to use the `apply()` family is essential for heavy R users.  
+
+--
+
+- The basic idea behind these functiions is applying a function recursively on subsets of an object.
+
+  - As you can guess, it can often replace a `for` loop.  
+
+--
+
+- Most (if not all) parallel computing packages in R also require understanding how to use `lapply()` 
+
+--
+
+#### &amp;nbsp;
+
+We'll cover `apply()` and `lapply()` today.  But many others exist!  
+  - `sapply()`, `mapply()`, `tapply()`, `rapply()`, and just `by`
+
+
+
+
+
+---
+## apply()
+
+
+```r
+apply(mat, MARGIN, function(x) some_func(x, other_args))
+```
+
+Use `apply()` to apply a function across a dimension of a matrix, array, or dataframe. 
+
+#### &amp;nbsp;
+
+Think of `apply()` as doing the following (assume `mat` is a 2D matrix):
+
+--
+
+1. breaks `mat` into components along the specified `MARGIN`
+
+  - `MARGIN=1` specifies rows, `MARGIN=2` specifies columns, and so on
+  
+  - e.g. if `MARGIN==1`, `mat` is a collection of row vectors
+
+--
+
+1. performs the specified function `some_func` using each component 
+  - the role of each component (e.g. row) in the function is specified by the role of `x`.
+
+
+
+
+
+---
+## apply() example
+
+Generate a matrix to apply the `mean()` function to:
+
+```r
+mat &lt;- rbind(rnorm(10), rnorm(10, 5), rnorm(10, -5, 2))
+dimnames(mat) &lt;- list(paste0("row", 1:3), 
+                      paste0("col", 1:10))
+round(mat,1) # for display on slide
+```
+
+```
+##      col1 col2 col3 col4 col5 col6 col7 col8 col9 col10
+## row1  2.5 -0.1 -1.6  0.1  0.6 -1.0 -0.5 -0.3  1.3   0.1
+## row2  6.6  4.2  4.2  6.3  5.3  5.1  6.7  5.2  6.1   6.6
+## row3 -7.7 -5.7 -3.6 -6.5 -2.0 -3.6 -1.9 -2.5 -4.7  -5.3
+```
+
+--
+
+We will set `MARGIN=1,` which indicates rows.  So the function will be applied to each row vector in `mat`
+
+
+
+
+
+---
+class: animated, fadeIn
+## apply() example cont'd
+
+Generate a matrix to apply the `mean()` function to:
+
+```r
+mat &lt;- rbind(rnorm(10), rnorm(10, 5), rnorm(10, -5, 2))
+dimnames(mat) &lt;- list(paste0("row", 1:3), 
+                      paste0("col", 1:10))
+round(mat,1) # for display on slide
+```
+
+#### &amp;nbsp;
+
+Since `mean()` only requires 1 argument, we can simplify our `apply()` statement:
+
+--
+
+```r
+apply(mat, 1, mean)
+```
+--
+
+```
+##       row1       row2       row3 
+##  0.1120051  5.6355773 -4.3457328
+```
+
+
+
+
+
+---
+## apply() example 2
+
+Let's see the syntax when we want to specify other arguments:
+
+Here is similar data (the only difference is 1000 columns instead of 10)
+
+
+```r
+mat &lt;- rbind(rnorm(1000), rnorm(1000, 5), rnorm(1000, -5, 2))
+dimnames(mat) &lt;- list(paste0("row", 1:3), 
+                      paste0("col", 1:1000))
+```
+
+We'll apply the `quantile()` function, but we'll specify that we want the .025, .5, and .975 quantiles.
+
+
+--
+
+```r
+apply(mat, 1, function(x) quantile(x, probs=c(.025, .5, .975)))
+```
+--
+
+```
+##               row1     row2      row3
+## 2.5%  -2.036691333 2.952048 -8.949307
+## 50%    0.002919416 5.107169 -4.967468
+## 97.5%  2.016591710 7.016890 -1.077091
+```
+
+
+
+
+
+
+
+---
+## lapply()
+`lapply()` applies a function to each element in a list.  
+
+--
+
+Example given as an exercise!
+
+
+
+
+
+
+---
+## Writing your own functions:
+OK, so you need to do something specific to your use case, and you will need to do it more than once.  
+
+--
+
+You should write a **function** for it.
+
+--
+
+First and, if it is going to be complex, the most important step: 
+--
+**Google to see if it already exists.**
+
+--
+
+Second step:
+--
+Think of other ways to describe what you need to do, and **Google to see if it already exists.**
+
+
+
+
+---
+## Why not just copy and paste?
+
+Copy-pasting is a hassle in many ways (variable name management, messy code, etc.)
+
+--
+
+Functions have a few other advantages:
+
+1. Do not pollute or interact with your workspace
+1. More concise, easier-to-understand code
+1. Realize you made a mistake in this thing you do over and over again?  Just change your function and re-run
+
+
+
+---
+## Function syntax
+
+
+```r
+my_func &lt;- function(arg1, arg2=1:4){  # declare function my_func
+  result &lt;- sum(arg1) / sum(arg2)     # do stuff
+  return(result) 
+}
+```
+
+A function in R performs a set of operations using arguments. 
+
+--
+
+- variables defined within a function are local 
+
+  - e.g. `result` exists only while `my_func` is executed
+
+--
+
+
+```r
+my_func(arg1=1:100)
+```
+
+```
+## [1] 505
+```
+
+--
+
+```r
+result # does not exist outside of function
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'result' not found
+```
+
+--
+
+```r
+arg1   # does not exist outside of function
+```
+
+```
+## Error in eval(expr, envir, enclos): object 'arg1' not found
+```
+
+
+
+
+---
+class: animated, fadeIn
+## Function syntax
+
+
+```r
+my_func &lt;- function(arg1, arg2=1:4){  # declare function my_func
+  result &lt;- sum(arg1) / sum(arg2)     # do stuff
+  return(result) 
+}
+```
+
+A `function` in R performs a set of operations using arguments. 
+
+--
+
+- Your function must specify its output (can output *only one object*) either by:
+
+  1. having the last line be an operation *without* variable assignment (e.g. just `sum(arg1) / sum(arg2)`)
+  
+  1. using `return()`.  Can only return 1 object, but the object can be a vector, list, etc.
+
+
+
+---
+class: animated, fadeIn
+## Function syntax
+
+
+```r
+my_func &lt;- function(arg1, arg2=1:4){  # declare function my_func
+  result &lt;- sum(arg1) / sum(arg2)     # do stuff
+  return(result) 
+}
+```
+
+A `function` in R performs a set of operations using arguments. 
+
+--
+
+- your function will do the same thing each time you call it
+
+```r
+my_func(arg1=1:100)
+```
+
+```
+## [1] 505
+```
+
+```r
+my_func(arg1=1)
+```
+
+```
+## [1] 0.1
+```
+
+```r
+my_func(arg1=100:200, arg2=5:15)
+```
+
+```
+## [1] 137.7273
+```
+
+
+
+
+
+
+---
+## Writing your own functions:
+
+In general, for more complex functions, I recommend writing the non-function version first (easier to debug).
+
+Let's try writing a function that we will be able to `apply()` to the dataset later (we'll do it by county).  
+
+--
+
+Specifically, we'll make a function that
+1. detects if all consecutive days in a range are present, and 
+1. if not, counts the number of time skips and total days missing.
+
+
+
+
+
+---
+## Writing your own functions: example
+We'll be using the `date` column to check consecutive days.  
+
+We could work on it as a factor, but base R includes a `Date` class which will make things a bit clearer and easier.
+
+
+```r
+ct$date &lt;- as.Date(ct$date)
+```
+
+--
+
+And since we're planning to apply this by county, let's work on one sample county:
+
+
+```r
+dat &lt;- subset(ct, fips==6059)
+dat[1:3,]
+```
+
+```
+##          date county      state fips cases deaths
+## 6  2020-01-25 Orange California 6059     1      0
+## 11 2020-01-26 Orange California 6059     1      0
+## 16 2020-01-27 Orange California 6059     1      0
+```
+
+
+
+
+
+---
+## Writing your own functions: example (2)
+Now we can use the `diff()` function, which calculates the difference between consecutive elements in a vector. For example:
+
+
+```r
+diff(c(0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55))
+```
+
+```
+##  [1]  1  0  1  1  2  3  5  8 13 21
+```
+
+--
+
+Let's try it on our dates:
+
+```r
+diff(dat$date)
+```
+
+--
+
+
+```
+## Time differences in days
+##   [1] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+##  [38] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+##  [75] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## [112] 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+```
+
+
+Cool!  Turns out `diff()` has a specific operation for objects of class `Date`.  
+--
+... But our subset is a little boring in this regard.
+
+
+
+
+
+
+---
+## Writing your own functions: example (3)
+
+  Let's make it a bit more interesting:
+
+
+```r
+dat &lt;- dat[c(1:5, 10:15, 20:25), ]
+```
+
+--
+
+So there should be 2 jumps in date, with a total of 8 days missing.
+
+--
+
+Let's try `diff()` again:
+
+```r
+diff(dat$date)
+```
+
+```
+## Time differences in days
+##  [1] 1 1 1 1 5 1 1 1 1 1 5 1 1 1 1 1
+```
+
+
+
+
+
+---
+## Writing your own functions: example (4)
+Now we'll write code to see if every date is included by counting how many jumps there are and how many days are missing.
+
+
+```r
+daydiffs &lt;- diff(dat$date)
+daydiffs
+```
+
+```
+## Time differences in days
+##  [1] 1 1 1 1 5 1 1 1 1 1 5 1 1 1 1 1
+```
+--
+
+```r
+n_jumps &lt;- sum(daydiffs != 1)
+n_jumps
+```
+
+```
+## [1] 2
+```
+--
+
+```r
+total_missed &lt;- sum(daydiffs-1) 
+total_missed
+```
+
+```
+## Time difference of 8 days
+```
+
+Looks like it works!
+
+
+
+
+
+---
+## Writing your own functions: example (5) 
+Final step: wrap it into a function
+- notice the only input was `dat$date`, a vector of class `Date`
+
+--
+
+
+```r
+days_missed &lt;- function(date_vec){
+  daydiffs &lt;- diff(date_vec) #changed dat$date to date_vec
+  n_jumps &lt;- sum(daydiffs != 1)
+  total_missed &lt;- sum(daydiffs-1)
+  
+  # format the output
+  res &lt;- c(n_jumps, total_missed)
+  names(res) &lt;- c("jumps", "total")
+  
+  return(res)
+}
+```
+
+--
+
+
+```r
+days_missed(dat$date)
+```
+
+```
+## jumps total 
+##     2     8
+```
+
+
+
+
+
+
+
+
+---
+## A few general resources:
+
+- [stackoverflow](https://stackoverflow.com/questions/tagged/r) for R code
+- [Cross-Validated](https://stats.stackexchange.com/) for questions about statistics
+- [R-bloggers](https://www.r-bloggers.com/how-to-learn-r-2/) for tutorials
+
+
+Especially for help with packages:
+- CRAN reference manuals and `browseVignettes()`
+
+
+In addition, anything by Hadley Wickham:
+  - [R for data science](https://r4ds.had.co.nz/)
+  - [Advanced R](http://adv-r.had.co.nz/)
+  - [ggplot2: Elegant Graphics for Data Analysis](https://ggplot2-book.org/)
+
+
+
+---
+## End of Session 1 Part 1
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

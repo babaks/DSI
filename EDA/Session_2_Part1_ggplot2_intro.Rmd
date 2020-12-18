@@ -1,0 +1,622 @@
+---
+title: "Intro to R and Data Visualization with ggplot2: Session 2 part 1"
+subtitle: UCI Data Science Initiative
+params: 
+  reportdate: "`r format(Sys.time(), '%d %B %Y')`"  # to be replaced
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author: "Arnold Seong"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css:
+      - default
+      - default-fonts
+      - "https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css"
+      - xaringan-themer.css
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+  
+# output:
+#   html_document:
+#     highlight: tango
+
+---
+
+
+
+```{r setup, include=FALSE, message=F, echo=F, warning=F}
+library(xaringanthemer)
+# style_xaringan(
+  # code_inline_background_color = "#C0C0C0"
+#   text_font_family = "Droid Serif",
+#   text_font_url = "https://fonts.googleapis.com/css?family=Droid+Serif:400,700,400italic",
+#   header_font_google = google_font("Yanone Kaffeesatz")
+# )
+style_mono_accent(base_color = "#3C989E")
+
+# knitr::opts_chunk$set(cache=FALSE, warning=FALSE, message=FALSE, echo=TRUE, warning=FALSE, error=FALSE)
+knitr::opts_chunk$set(cache=TRUE, warning=TRUE, message=TRUE, echo=TRUE, warning=TRUE, error=TRUE)
+
+#set scientific notation digit threshold
+options(scipen=10)
+
+#load libraries
+library(knitr)
+library(ggplot2)
+library(RColorBrewer)
+```
+
+layout: true
+
+<style>
+pre {
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+    margin: 1em 0px;
+    margin-top: 0.5em;
+    margin-right: 0px;
+    margin-bottom: 0em;
+    margin-left: 0px;
+}
+.remark-inline-code {
+  background: #F5F5F5; 
+}
+</style>
+
+
+<!-- xaringan::inf_mr() -->
+
+---
+class: animated, fadeIn
+
+## Workshop info
++ We will be recording today's sessions for potential future use
+    + You may not want to activate video
+    + Please set your zoom to mute your audio until you would like to speak
+    + You can change your icon name by mousing over, clicking on the 3 dots
+    
++ Please ask questions during lectures & throughout the day!
+    + Use chat
+    + Raise hand (`Alt+Y`)
+    + Unmute yourself temporarily (hold `Spacebar`).
+
+
+<!-- + To access course materials please visit the [IDA-with-R website](https://ucidatascienceinitiative.github.io/IDA-with-R/). -->
+<!-- + **Please [download](https://github.com/UCIDataScienceInitiative/IDA-with-R/archive/master.zip) & unzip the Github repository!** -->
+
+
+---
+class: inverse
+## Session 2 Topics
+
+1.  Introduction to ggplot2 and the "grammar of graphics"
+  - understanding the logic of ggplot2
+  - preparing and plotting data.
+1. Beyond ggplot2 basics
+  - overlaying geoms
+  - visualizing strata for comparison
+  - changing default plot options.
+
+
+
+
+---
+class: inverse, animated, fadeIn
+## Session 2 Topics
+
+1.  Introduction to ggplot2 and the "grammar of graphics"
+  - understanding the logic of ggplot2
+  - preparing and plotting data.
+1. **Beyond ggplot2 basics**
+  - **overlaying geoms**
+  - **visualizing strata for comparison**
+  - **changing default plot options.**
+
+
+
+
+
+
+---
+## Intro to ggplot2
+
+- `ggplot2` is an R package for statistics and data visualization 
+
+- developed by Hadley Wickham, based on the Grammar of Graphics (Wilkinson 2005)
+
+--
+
+- underlying principle: just like a sentence, a graph is made up of independent components that can be combined according to general rules.
+
+
+--
+
+- further resources:
+  - [2010 paper by Hadley Wickham](https://vita.had.co.nz/papers/layered-grammar.html) describing ggplot2
+  - [ggplot2 online book](https://ggplot2-book.org/), also by Wickham
+
+- Much of this portion will draw on these two resources!
+
+
+
+
+---
+## `ggplot2` advantages / disadvantages
+
+Advantages:
+  - modularity and iterative updating
+  - cohesive framework
+  - creativity - move beyond named graphics
+
+
+Disadvantages:
+  - just as easily nonsensical
+  - like learning a new language sometimes
+      - in terms of the "grammar of graphics"
+      - neologisms - i.e. what is a "grob"?
+  - data must be provided in a certain form
+
+
+
+
+---
+## `ggplot2()` advantages in practice
+
+Advantages:
+
+  - Particularly helpful for complex plotting tasks:
+  
+    - Many issues regarding graph clarity (e.g. legends) are taken care of
+  
+    - Modularity allows us to more easily build, iterate, rebuild plots layer by layer, mapping by mapping
+  
+--
+
+  - Prettier out of the box
+  
+--
+
+  - More development taking place.  E.g. [`plotly`](https://plotly.com/ggplot2/)
+
+
+
+--
+
+You can do in base R anything you can do in ggplot2, and vice versa.  Some things are easier in base R, some in ggplot2 ... and a lot of this depends on your familiarity with each one.
+
+
+
+
+---
+## Logic of ggplot2 
+(adapted from [ggplot2-book](https://ggplot2-book.org/getting-started.html#introduction-1))
+
+Three key pieces to defining a ggplot2 plot:
+
+1. **data**
+
+  - must be a dataframe
+  - use long format
+
+--
+
+1. a set of **aesthetic mappings** between variables in the data and visual properties
+
+--
+
+  - for example: 
+      - frequency --> y-position
+      - binned values --> x-position
+      - factor level --> color
+      
+--
+
+1. a layer (usually a **geom**) which describes how to render each observation
+
+--
+
+  - continuing the example:
+      - layer: bars
+
+
+
+
+---
+## ggplot2 syntax
+
+In general, we declare our data and aesthetic mapping using `ggplot()`, then "add" a geometric object layer.
+
+Many different geometric layers exist.  Most common are
+- `geom_point()`, `geom_smooth()`
+- `geom_boxplot()`
+- `geom_histogram()`, `geom_freqpoly()`, `geom_density()`
+- `geom_line()`
+- `geom_bar()`
+
+
+
+
+---
+## ggplot2: example dataset: `diamonds`
+
+- using `diamonds` dataset (included in `ggplot2` package)
+
+```{r, echo=F}
+knitr::kable(head(diamonds), format = 'html')
+```
+
+- we'll make some scatterplots with this data of `price` vs `carat`, using `color` or `cut` as factors.
+
+
+
+---
+## ggplot2: scatterplot
+
+
+```{r, eval=FALSE, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=carat, y=price)) + 
+  geom_point()
+```
+
+
+--
+
+```{r, echo=FALSE, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=carat, y=price)) + 
+  geom_point()
+```
+
+
+
+
+
+---
+## ggplot2: scatterplot
+
+
+```{r, eval=FALSE, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=carat, y=price, color=color)) + 
+  geom_point()
+```
+
+
+--
+
+```{r, echo=FALSE, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=carat, y=price, color=color)) + 
+  geom_point()
+```
+
+
+
+
+
+---
+## ggplot2: scatterplot + smooth
+
+
+```{r, eval=FALSE, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=carat, y=price, color=color)) + 
+  geom_point(alpha=.25) +
+  geom_smooth()
+```
+
+
+--
+
+```{r, echo=FALSE, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=carat, y=price, color=color)) + 
+  geom_point(alpha=.25) + 
+  geom_smooth()
+```
+
+
+
+---
+## syntax
+
+```{r, eval=F}
+ggplot(data=diamonds, aes(x=carat, y=price, color=color)) + 
+  geom_point(alpha=.25) + 
+  geom_smooth()
+```
+
+
+- First line: global properties
+  - all geoms use the data and mapping defined here unless otherwise specified
+  
+- Second line: add a point layer (i.e. data + mapping displayed as points)
+  - added transparency to this layer using `alpha=.25` 
+
+- 3rd line: add a smooth layer (data + mapping processed with a smoother and displayed as a line)
+  - default smooth method is a Generalized Additive Model with penalized cubic regression splines.
+
+
+
+
+---
+## changed color to cut
+
+base R would require rewriting the legend...
+
+```{r, fig.width=7, fig.height=5, message=FALSE}
+ggplot(data=diamonds, aes(x=carat, y=price, color=cut)) + 
+  geom_point(alpha=.25) + 
+  geom_smooth()
+```
+
+
+
+
+---
+## `color` aesthetic in point layer only
+
+```{r, eval=F}
+ggplot(data=diamonds, aes(x=carat, y=price)) + 
+  geom_point(aes(color=cut), alpha=.25) + 
+  geom_smooth()
+```
+
+- now we will only get one smooth line (using all the data).
+
+--
+
+```{r, echo=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=carat, y=price)) + 
+  geom_point(aes(color=cut), alpha=.25) + 
+  geom_smooth()
+```
+
+
+
+
+
+---
+## Grouped histograms?
+
+```{r, eval=F, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=price)) + 
+  geom_histogram(aes(color=cut), alpha=.25)
+```
+
+--
+
+Hmmmm, no....  (also, notice the auto-generated message)
+
+```{r, echo=F, fig.width=7, fig.height=5}
+ggplot(data=diamonds, aes(x=price)) + 
+  geom_histogram(aes(color=cut), alpha=.25)
+```
+
+
+
+
+
+
+---
+## Grouped histogram: attempt 2
+
+```{r, eval=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25)
+```
+
+--
+
+Hmmmm, prettier but still no....
+
+```{r, echo=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25)
+```
+
+
+
+
+---
+## Grouped histogram: attempt 3
+
+```{r, eval=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25, position="identity")
+```
+
+--
+
+OK!  but they all overlap, so we can't see anything
+
+```{r, echo=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25, position="identity")
+```
+ 
+
+
+
+---
+## Grouped histograms: facet-wrapped
+
+```{r, eval=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25) + 
+  facet_wrap(~cut)
+```
+
+--
+
+better! But we have too many "Ideal" diamonds (y-axis scaling poor)
+
+```{r, echo=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25) + 
+  facet_wrap(~cut)
+```
+ 
+
+
+
+---
+## Grouped histograms: facet-wrapped
+
+```{r, eval=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, y=..density.., 
+                          color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25) + 
+  facet_wrap(~cut)
+```
+
+--
+
+```{r, echo=F, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=price, y=..density.., 
+                          color=cut, fill=cut)) + 
+  geom_histogram(alpha=.25, bins=30)+ 
+  facet_wrap(~cut)
+```
+
+
+
+
+
+---
+## More low-carat Ideal cuts?
+
+```{r, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=carat, y=..density..,
+                          color=cut, fill=cut)) +
+  geom_histogram(alpha=.25, bins=30) +
+  facet_wrap(~cut)
+```
+
+
+
+
+---
+## All on one using a density plot
+
+```{r, fig.width=7, fig.height=5, message=F}
+ggplot(data=diamonds, aes(x=carat, color=cut, fill=cut)) +
+  geom_density(alpha=.5)
+```
+
+
+
+
+
+---
+## buncha boxplots
+```{r}
+# discretizing carats into quartiles
+carat_levs <- c(0, quantile(diamonds$carat))
+diamonds$carat_fac <- factor(cut(diamonds$carat, carat_levs), ordered=TRUE)
+
+ggplot(data=diamonds, aes(x=carat_fac, y=price, color=cut)) + 
+  geom_boxplot() 
+```
+
+
+
+---
+## buncha boxplots... better labels (code)
+
+- make better labels using `labs()`
+
+- can save the base plot into an object, and make modifications by adding plot components / specifications
+
+
+```{r, eval=F}
+bp <- ggplot(data=diamonds, aes(x=carat_fac, y=price, color=cut)) + 
+  geom_boxplot() 
+
+bp +
+  labs(title="price by carat quartile", 
+       subtitle="broken down by cut quality",
+       x="carat quartiles")
+```
+
+
+
+
+---
+## buncha boxplots... better labels (plot)
+```{r, echo=F}
+bp <- ggplot(data=diamonds, aes(x=carat_fac, y=price, color=cut)) + 
+  geom_boxplot() 
+
+bp +
+  labs(title="price by carat quartile", 
+       subtitle="broken down by cut quality",
+       x="carat quartiles")
+```
+
+
+
+
+
+---
+## Different data:
+
+- we can also specify that different layers use different datasets.
+
+--
+
+- this might be useful if, for example, you generate predictions based on a subset of your data, and want to visualize it against the full data.
+
+```{r}
+# sample subset + build loess model
+dia_sub <- diamonds[sample(1:nrow(diamonds), 500), ]
+mod <- loess(price~carat, data=dia_sub)
+
+# generate predictions
+grid <- data.frame(carat = seq(min(diamonds$carat), max(diamonds$carat), length = 100))
+grid$price <- predict(mod, newdata = grid)
+
+ggplot(data=diamonds, aes(x=carat, y=price)) + 
+  geom_point(alpha=.01) + 
+  geom_smooth(method='loess', se=FALSE) +
+  geom_line(data=grid, aes(x=carat, y=price), color="hotpink")
+
+
+ggplot(data=diamonds, aes(y=price, x=table, size=carat, alpha=carat, color=color)) +
+  geom_point() +
+  facet_wrap(~cut)
+
+
+
+```
+
+
+
+
+---
+## data format
+
+
+In general, plotting is easier when your data is clean and in the right shape.  
+
+The `diamonds` dataset has already been processed for use with ggplot2, so plotting with it is much easier than with the datasets you get from your collaborators!
+
+--
+
+`ggplot2` requires dataframes (or, um, "tibbles"... yes.  I know.), and plotting using ggplot2 is much easier when your data 
+
+- is in long format
+
+- factors are ordered in the order you want them displayed
+
+- factors don't have too many levels
+
+- names are cleaned
+
+In the next portion, we'll do some more EDA on the NYTimes dataset, and cover ggplot2 and data prep in a bit more depth.
+
+
+
+
+
+
+

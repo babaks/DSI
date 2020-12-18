@@ -1,0 +1,458 @@
+---
+title: "Intro to R and Data Visualization with ggplot2: Exercise 1"
+subtitle: UCI Data Science Initiative
+params: 
+  reportdate: "`r format(Sys.time(), '%d %B %Y')`"  # to be replaced
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author: "Arnold Seong"
+output:
+  html_document:
+    df_print: paged
+    theme: cerulean
+    highlight: pygments
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_fold: hide
+# output:
+  # pdf_document:
+    # extra_dependencies: ["xcolor", "bm", "amssymb"]
+    # highlight: tango
+    # number_sections: true
+  # html_document:
+  #   highlight: tango
+  #   number_sections: true
+---
+
+```{r setup, include=FALSE, message=F, echo=F, warning=F}
+# knitr::opts_chunk$set(cache=FALSE, warning=FALSE, message=FALSE, echo=TRUE, warning=FALSE, error=FALSE)
+knitr::opts_chunk$set(cache=TRUE, warning=TRUE, message=TRUE, echo=TRUE, eval=FALSE, warning=TRUE, error=TRUE)
+
+#set scientific notation digit threshold
+options(scipen=10)
+
+#load libraries
+library(ggplot2)
+library(RColorBrewer)
+```
+
+
+
+
+This first set of exercises will deal with reading the New York Times' county-level COVID-19 dataset into R, exploring various structural and content-related feauters of the data, and manipulating the dataset so that it is in a form we can use later.
+
+1. This may look like a lot, but that's mostly because it's broken down into very small tasks.
+
+1. **Some** of these exercises will replicate code from the slides for Session 1: Intro to R, but many do not.  We will be using the form of the dataset you end up with here in the next sessions.
+
+1. Answers are in this document as code chunks, but the code is not evaluated here, so you will have to run it in your own session in order to see the output / complete these tasks.  
+    - The intention is that you try these on your own first, and use the answers to check what you've done.
+    - Your code may not be exactly the same as the answers.  If the output matches, it's fine.
+    - (Hit the little buttons on the right that say "Code" to see them.  Try this one here)
+
+```{r}
+# Hi!  I'm a code chunk! 
+# Don't look at me till you've tried the task yourself!
+```
+
+
+## Load & Format Data
+### Data Input
+
+1. Open a new R script to write and save your code for these exercises.  Save this file in a new folder.
+
+1. Make a new "data" folder within the one you just made
+
+1. Download the data and assign it to the variable `ct`
+    - the link is [https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv](https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv)
+    - take a look at the link. Should you use `read.table()` or `read.csv()`?
+        - *Note*: Downloading it via R may take a little longer than following the link.
+
+```{r}
+ct <- read.csv("https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv")
+```
+
+
+
+### Look at the data
+
+1. Use `names(ct)` or `colnames(ct)` to look at the column names.
+
+
+2. Use `ct` to look at however many rows R will show you.
+
+
+3. Then look at the first 10 rows using `head()`
+
+```{r}
+head(ct, 10)
+```
+
+
+
+
+
+### Formatting data
+1. Now, use `str(ct)` to get an overview of the data types
+    - Notice that `date` is stored as a factor, and `fips` as an integer
+
+&nbsp;
+
+
+2. Change the the `date` variable in `ct` to the Date class using `as.Date()` 
+    - assign it back to the column in `ct` using the `$` operator
+
+```{r}
+ct$date <- as.Date(ct$date)
+```
+
+
+3. Change the `fips` variable to a factor using `as.factor()`.  
+
+```{r}
+ct$fips <- as.factor(ct$fips)
+```
+
+
+4. Use `str(ct)` to look at the variables in `ct` again.  See anything odd?
+    - *Hint:* `fips` are supposed to be unique numeric identifiers for counties.
+
+&nbsp;
+
+
+5. **(Optional)** Take a moment to scan the [NYTimes github page](https://github.com/nytimes/covid-19-data) to understand why this might be the case.
+    - look at the section "U.S. National-Level Data" under "Historical Data"
+    - look at the entry for "New York" under "Geographic Exceptions"
+
+
+
+
+
+
+
+
+## RStudio usage
+Now that you've written a few lines of code, I just want to check: You're writing your code in the "Script" pane of RStudio, right?  
+
+Remember that you can hit `Ctrl + Enter` or `Alt + Enter` (on Mac: `Cmd+Return` and `Option+Return`) to execute your code.  
+  
+1. Try going back to a few lines and executing them using these keyboard shortcuts.  Try a few things:
+    - place the cursor on a line without selecting anything
+    - select a few lines
+    - select just a variable name 
+    - select just the function name
+    
+&nbsp;
+
+
+2. You can comment your code using `#`.  Everything to the right of the pound sign will not be executed as code.  Try it out.
+
+
+
+3. Look at the shortcuts.  In the top menu, click on Tools -> Keyboard Shortcuts Help
+    - also at [https://support.rstudio.com/hc/en-us/articles/200711853-Keyboard-Shortcuts](https://support.rstudio.com/hc/en-us/articles/200711853-Keyboard-Shortcuts)
+
+&nbsp;
+
+
+4. Under the "Source Editor" heading in the Keyboard Shortcuts you will see a combination for "Comment/Uncomment lines".  Try it out by selecting some code and using the shortcut.  
+
+
+5. Under the same heading, look for the keyboard shortcut for "Insert Section".  
+    - Go back to your script and use it.  
+    - A pop-up should come with a field for you to enter text.  
+    - Enter some text and see what happens in your script.  
+
+&nbsp;
+
+
+6. Use the "Insert Section" keyboard shortcut to give your code thus far a heading.  "Load & Format Data" would be apt.
+
+
+
+
+
+
+
+## Subsetting
+
+1. Subset your data to only include the date June 1, 2020, or `"2020-06-01"`.  Assign it to the variable `ct_june1`  
+    - Hint: use `which()` or `subset()`
+
+```{r}
+ct_june1 <- subset(ct, date=="2020-06-01")
+```
+
+2. Look at the first 10 rows.  Use the `[]` subsetting operator
+
+```{r}
+ct_june1[1:10,]
+```
+
+
+3. What are the dimensions of `ct_june1`?  Use `dim()` or both `nrow()` and `ncol()`.
+```{r}
+dim(ct_june1)
+```
+
+
+4. How many counties does `ct_june1` contain data on?  Use `unique()` and `length()`.
+```{r}
+length(unique(ct_june1$county))
+```
+
+
+5. Subset `ct` to only California  (**don't use `ct_june1`**; we want all dates).  
+    - Call it `ct_CA`.  
+    - Find the dimensions, and how many counties are recorded.
+    
+```{r}
+ct_CA <- subset(ct, state=="California")
+dim(ct_CA)
+length(unique(ct_CA$county))
+```
+
+
+
+
+
+
+
+
+## Augmenting Data
+Here we add a factor that identifies states on the East or West coast.
+
+**Note: skip the Multicursor part if you wish/get stuck.**  The necessary output (defining the variable `EC`) is provided under the 2nd code chunk.
+
+### Using Multicursor
+1. Copy/paste the commented-out list of East Coast states provided in the code chunk.  
+    - I was too lazy to look at a map, so the list is from [an arbitrary website Google gave me](https://journeys.maps.com/what-states-are-on-the-east-coast-of-the-us/)
+
+```{r}
+
+# Florida
+# Georgia
+# South Carolina
+# North Carolina
+# Virginia
+# Maryland
+# Delaware
+# New Jersey
+# New York
+# Connecticut
+# Rhode Island
+# Massachusetts
+# New Hampshire
+# Maine
+
+```
+
+
+2. Now, use your multicursor to delete the pound sign and spaces, add quotation marks, and commas.
+     - step-by-step instructions: 
+         1. use `Alt+Ctrl+Up/Down arrow keys` to place a cursor on each line
+         1. hit `End` on your keyboard to put your cursor at the end of each line
+         1. hit `"` (quotation mark)
+         1. hit `,` (comma) and `Space`
+         1. hit `Home` to bring your cursor to the beginning of each line
+         1. hit `Delete` twice to delete the pound sign and space
+         1. hit `"` (quotation mark)
+         1. hit `Home` and then `Backspace` to put it all on one line (or `End` and `Delete`)
+         1. hit `Esc` or click anywhere to exit multicursor
+         1. delete the final comma.
+      - wrap all of this in `c()` to make a vector, and assign it to the variable `EC`
+
+```{r}
+EC <- c("Florida", "Georgia", "South Carolina", "North Carolina", "Virginia", "Maryland", "Delaware", "New Jersey", "New York", "Connecticut", "Rhode Island", "Massachusetts", "New Hampshire", "Maine")
+```
+
+
+
+
+### Adding a Coastal Factor
+
+1. Create a variable `coastal_states` by adding Washington, Oregon, and California to the vector `EC` (in the code chunk before this).  Check it.
+```{r}
+coastal_states <- c(EC, "Washington", "Oregon", "California")
+coastal_states
+```
+
+
+2. Type `?is.element` to see the help file on Set Operations.  Then use the following code chunk to see what happens.
+```{r}
+x <- 1:5
+y <- sample(1:10, 10)
+x
+y
+
+#is.element creates a TF vector for x (length 5)
+is.element(x, y)
+x[is.element(x, y)]
+
+#reversing order of arguments
+is.element(y, x)
+y[is.element(y, x)]
+```
+
+
+3. Use `is.element()` and `coastal_states` to create a logical vector identifying whether the states in `ct$state` are coastal states.  Call it `coastal_TF`
+```{r}
+coastal_TF <- is.element(ct$state, coastal_states)
+```
+
+
+4. Use `ifelse()` to fill a character vector with "coastal" or "not coastal" depending on the logical vector `coastal_TF`.  
+```{r}
+coastal <- ifelse(coastal_TF, "coastal", "not coastal")
+```
+
+
+5. Add the vector you just made to the dataframe `ct` by assigning it as a factor to `ct$coastal`.  Then look at `ct` again using `str()`
+```{r}
+ct$coastal <- as.factor(coastal)
+str(ct)
+```
+
+
+6. Spot check `ct` to make sure your coastal vector makes sense.  You can see how I'd do it in the code chunk.
+```{r}
+#run this code a few times by hitting Alt + Enter
+ct[sample(1:nrow(ct), 10), #randomly select rows
+   c('state', 'coastal')]  #just look at state and coastal
+```
+
+
+
+
+
+
+
+## Saving data
+
+1. Save the dataset `ct` to your data folder as "ct.Rdata".  
+    - Remember to check your working directory by typing `getwd()` 
+    - Set your working directory using the RStudio dropdown or using `setwd()`.  
+      - Session --> Set Working Directory --> To Source File Location **or** Choose Directory
+    - After you set your working directory, just run `getwd()` again to be sure.
+
+```{r}
+# REMEMBER TO CHECK YOUR WORKING DIRECTORY
+contents <- "ct"  # kinda redundant here
+save(contents, ct, file="data/ct.Rdata")
+```
+
+
+
+
+
+## Optional exercises: lapply, a discrepancy
+
+### `lapply`ing the `days_missed` function
+
+1. First, copy/paste the `days_missed` function from the following code chunk into your own script, and run it.  (may need to unhide this code chunk by clicking the small "Code" button)
+
+```{r}
+days_missed <- function(date_vec){
+  daydiffs <- diff(date_vec) #changed dat$date to date_vec
+  n_jumps <- sum(daydiffs != 1)
+  total_missed <- sum(daydiffs-1)
+  # format the output
+  res <- c(n_jumps, total_missed)
+  names(res) <- c("jumps", "total")
+  return(res)
+}
+```
+
+
+2. Use `ct_CA_list <- split(ct_CA, ct_CA$county)` to split `ct_CA` into a list of dataframes for each county in California.
+
+```{r}
+ct_CA_list <- split(ct_CA, ct_CA$county)
+```
+
+
+3. Use `lapply(ct_CA_list, function(x) days_missed( __fill me in__ ))` to apply the `days_missed` function to each dataframe in `ct_CA_list`.  Don't assign it to anything so you can see the output immediately.
+
+```{r}
+lapply(ct_CA_list, function(x) days_missed(x$date))
+```
+
+
+4. (Not an exercise) Let's format this more nicely.  Just copy/paste the code chunk into your script and run it.
+
+```{r}
+temp_list <- lapply(ct_CA_list, function(x) days_missed(x$date))
+do.call(rbind, temp_list) # rbind() is for vectors; do.call forces it to work on the list.
+```
+
+
+
+
+
+
+### Mismatch in `fips` and `county`
+
+Here we will use `lapply()` to see the number of missed days by date.  
+
+  1. First, use `split(ct, ct$county)` to get a list of dataframes for each date.  Assign it to the variable `ct_list`, and see how long your list is.
+    
+```{r}
+ct_list <- split(ct, ct$county)
+length(ct_list)
+```
+
+
+  2. Look at the 5th entry in your list.  See anything weird?  We'll have to do something about this.
+  
+```{r}
+ct_list[5]
+```
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

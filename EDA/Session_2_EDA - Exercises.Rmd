@@ -1,0 +1,556 @@
+---
+title: "Intro to R and Data Visualization with ggplot2: Exercise 2"
+subtitle: UCI Data Science Initiative
+params: 
+  reportdate: "`r format(Sys.time(), '%d %B %Y')`"  # to be replaced
+date: "`r format(Sys.time(), '%d %B %Y')`"
+author: "Arnold Seong"
+output:
+  html_document:
+    df_print: paged
+    theme: cerulean
+    highlight: pygments
+    toc: yes
+    toc_depth: 3
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    code_fold: hide
+# output:
+  # pdf_document:
+    # extra_dependencies: ["xcolor", "bm", "amssymb"]
+    # highlight: tango
+    # number_sections: true
+  # html_document:
+  #   highlight: tango
+  #   number_sections: true
+---
+
+```{r setup, include=FALSE, message=F, echo=F, warning=F}
+# knitr::opts_chunk$set(cache=FALSE, warning=FALSE, message=FALSE, echo=TRUE, warning=FALSE, error=FALSE)
+knitr::opts_chunk$set(cache=TRUE, warning=TRUE, message=TRUE, echo=TRUE, eval=FALSE, warning=TRUE, error=TRUE)
+
+#set scientific notation digit threshold
+options(scipen=10)
+
+#load libraries
+library(ggplot2)
+library(RColorBrewer)
+```
+
+
+## Intro
+
+This second set of exercises will guide you through augmenting your data further, and then asks you to create your own visualizations using `ggplot2`.
+
+First we'll replicate the data manipulation and data augmentation on the NYTimes COVID-19 data `ct` in the slides for Session 2.  Then we'll walk through adding some new data.  Finally, you'll be asked to do your own EDA / create your own visualization - and it would be great if you shared them with us when we reconvene!  The impetus behind `ggplot2` is to help users imagine more creative, expressive ways of visualizing and communicating data, and sharing ideas is how we get beyond boring plots.
+
+**Look at the headings on the left to see if you're interested in the topic (i.e. what new data completing the task will add into our COVID-19 dataset).  Only do what interests you.  If you have a great idea for a visualization, just do the parts necessary here to get there, and go make it!  This document will still be here later.**
+
+
+As before, code answers are in this document as code chunks, but the code chunks are hidden and not evaluated here, so you will have to run it in your own session in order to see the output / complete these tasks.  
+
+
+
+
+## Session 2 data manipulation + augmentation
+
+### load data again and make `countyst` variable
+
+1. Load your data from Exercise 1
+```{r}
+getwd()
+load("data/ct.Rdata")
+```
+
+
+2. Check the variable names using `names()`, `colnames()`, `head()`, etc.
+```{r}
+ct[1:5, ]
+```
+
+
+3. Look at the output when you call `state.name` and `state.abb`
+
+
+4. create a test vector of full state names using the `sample()`, and match them to their abbreviations.
+```{r}
+test <- sample(state.name, 10, replace=T)
+test
+test_match <- state.abb[match(test, state.name)]
+
+#check
+cbind(test, test_match) 
+```
+
+
+5. play with the `paste0()` function. 
+```{r}
+#illustrate that paste0 does not add spaces, but it preserves all of them.
+paste0(test, "==     ", test_match, "? ...", "yes")
+```
+
+
+6. use your matching code (remember to change variable names!) with `paste0()` to add a column containing county and state abbreviations in the format "CountyName ST" to `ct`.  
+    - call it `ct$countyst`
+```{r}
+ct$countyst <- paste0(ct$county, 
+                      " ", 
+                      state.abb[match(ct$state, state.name)])
+```
+
+7. spot check to see that it worked.
+```{r}
+#run this till you're satisfied or find errors
+ct[sample(1:nrow(ct), 10), c("county", "state", "countyst")]
+```
+
+
+
+
+### data manipulation with `dplyr`
+
+#### First, let's make `countyst` an ordered factor, such that counties with higher case counts on the most recent date come before those with lower case counts.
+
+1. install and load `dplyr` if you have not already
+```{r}
+# install.packages("dplyr")
+library(dplyr)
+```
+
+
+2. use `dplyr` to create a dataframe that  
+        - orders the rows first by `cases`, then `state`, and then `county`  
+        - contains at least the columns you need to check that it worked  
+    - You'll need to use the pipe operator `%>%`, with functions `filter()`, `arrange()`, and possibly `select()`  
+        - call it `ct_last`  
+
+```{r}
+# order factor levels by most recent # cases
+ct_last <- ct %>%
+  filter(date==max(date)) %>%
+  arrange(cases, state, county) %>%
+  select(county, state, countyst, cases)
+```
+
+
+3. extract the variable `ct_last$countyst`.  
+   - It may contain duplicates due to quirks of the nytimes data.  
+   - However, it has rows in **ascending order** by most recent case # (the opposite of what we want)
+       - If we run `unique(ct_last$countyst)`, we'll get the unique values of `countyst` **in order of first appearance**.  
+       - But if we start at the end and come forward, order of first appearance should be correct.  
+   - use `unique()` and the new function `rev()` (reverses order) to obtain `countyst` in decreasing order by maxcases
+       - do you need to use `rev()` or `unique()` first?
+   - assign this to the new, standalone variable `countyst_ord` (not in `ct`)  
+
+```{r}
+countyst_ord <- unique(rev(ct_last$countyst))  # THIS is correct
+countyst_ord_INCORRECT <- rev(unique(ct_last$countyst)) 
+sum(countyst_ord != countyst_ord_INCORRECT, na.rm=T)
+```
+
+
+4. use `factor()` with options `levels=` and `ordered=` to re-order the factor levels in the variable `ct$countyst` (i.e. in the larger dataset `ct`)
+```{r}
+#re-order the factor levels
+ct$countyst <- factor(ct$countyst,
+                      levels=countyst_ord,
+                      ordered=TRUE)
+```
+
+
+
+
+
+
+#### other data augmentations via `dplyr`
+
+1. create a column in `ct` of the maximum observations to date for each county.  Use `group_by()` and `mutate()`, along with the pipe operator `%>%`
+    - call it `maxcases`
+
+```{r}
+# max observed cases for county
+ct <- ct %>%
+  group_by(countyst) %>%
+  mutate(maxcases = max(cases))
+```
+
+
+
+2. Add a column to `ct` of day-to-day differences.  Call it what you want.
+```{r}
+# add column of day-to-day differences
+ct <- ct %>%
+  group_by(countyst) %>%
+  arrange(date) %>%
+  mutate(diffs_cases = c(NA, diff(cases)))
+```
+
+
+3. create a sliding window average.  You'll need to have installed the package `data.table` for this (sorry!).  Just copy this code over.  Call it what you want.
+   - This calls for a sliding window of 7 days.  Feel free to try out different time spans (might be worth plotting the day-to-day differences against date, and comparing it to this new variable you make.)
+
+```{r}
+# create a sliding window average
+ct <- ct %>%
+  group_by(countyst) %>%
+  arrange(date) %>%
+  mutate(diffs_roll = data.table::frollmean(diffs_cases, n=7, na.rm=T))
+```
+
+
+4. Save your data to a new file in your data folder (don't just overwrite the old one).  
+```{r}
+contents <- "ct"
+save(contents, ct, file="data/Ex2.1.Rdata")
+```
+
+
+
+## Add county population to `ct`.  
+
+I'm not going to make you go through this again.  Just run the code line-by-line so you know what's happening in case there are errors (might occur, for example, if you've added more variables than simply what's outlined here, or renamed things.)
+
+This is split into 3 code chunks so you can make sure everything is OK before moving on. The first two code chunks do not make any alterations to `ct`, so you won't lose anything by running them.  
+
+The third code chunk replaces `ct`, so only run that when you're satisfied the first code chunk worked.
+
+
+1. **Code Chunk 1**: run line-by-line.  
+```{r}
+cens <- read.csv("https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/totals/co-est2019-alldata.csv")
+
+cens <- data.frame("pop2019" = cens$POPESTIMATE2019,
+                   "county" = cens$CTYNAME,
+                   "state" = cens$STNAME,
+                   "fips_st" = cens$STATE,
+                   "fips_ct" = cens$COUNTY)
+
+#fips codes: 2-digit state + 3-digit county
+combine_fips <- function(f_st, f_ct){
+  # f_ct=0 indicates a state total
+  f_ct <- ifelse(f_ct==0, NA, f_ct)
+
+  # count # digits in county FIPS code
+  # & how many 0s needed between codes
+  num_dig <- 1+floor(log(f_ct, 10))
+  num_0s <- 3-num_dig
+
+  # stick num0s 0s between the state and county codes
+  if(is.na(num_0s)){
+    return(NA)
+  } else if (num_0s==0){
+    return(as.numeric(paste0(f_st,f_ct)))
+  } else if (num_0s==1){
+    return(as.numeric(paste0(f_st, "0", f_ct)))
+  } else if (num_0s==2){
+    return(as.numeric(paste0(f_st, "00", f_ct)))
+  }
+}
+
+cens$fips <- apply(cens, 1, function(x) combine_fips(f_st=as.numeric(x["fips_st"]),
+                                                     f_ct=as.numeric(x["fips_ct"])))
+
+cens <- cens[!is.na(cens$fips), ] #remove multiple NA's
+cens$fips <- factor(cens$fips)
+ct_test <- left_join(ct, cens, by="fips")
+
+names(ct_test)
+
+# RUN this at least a few times to check if your data merge worked
+as.data.frame(ct_test)[sample(1:nrow(ct_test), 10), 
+                       c("county.x", "fips", "county.y")]
+
+
+ct_test[, c("county.x", "fips", "county.y")]
+ct_test <- ct_test[, 1:12]
+colnames(ct_test)[c(2, 3, 12)] <- c("county", "state", "pop")
+```
+
+
+
+2. **Code Chunk**: spot check
+```{r}
+# RUN THIS AT LEAST A FEW TIMES and look for discrepancies
+as.data.frame(ct_test)[sample(1:nrow(ct_test), 10), ]
+```
+
+
+3. **Code Chunk 3**: replace `ct` with `ct_test`, then deletes `ct_test.`  Do not run until you've spot-checked `ct_test`
+```{r}
+## WARNING ##
+# Only run this IF YOU"VE CHECKED EVERYTHING WORKED IN ct_test #
+ct <- ct_test
+rm(ct_test) # deletes ct_test from environment
+```
+
+
+4. Save.  Don't overwrite, just in case.
+```{r}
+save(contents, ct, file="data/Ex2.2_addpop.Rdata")
+```
+
+
+
+
+
+## (Optional) Add a US geographic region factor + some more usage of RStudio features 
+
+[Wikipedia](https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States) identifies the Census divisions / regions of the US for us.  Let's add the regions as a factor to our data.
+
+1. format code via Multi-cursor + Find/Replace (feel free to skip to the next code chunk if this is vexing)
+    - Below is an invalid code chunk.  The vector assignments are lacking quotation marks.
+    - use a combination of multi-cursor and Find/Replace (Ctrl-F) to get the quotation marks in the right places.
+    - Hints:
+        - use `Home`, `End` to get the very first and very last quotation marks needed in each vector
+        - RStudio will try to autocomplete quotation marks which do not appear to have existing matches in your code
+        - you can search for blank spaces in RStudio's find/replace
+        - use the "In selection" box for the find/replace
+```{r}
+
+
+# Div1 <- c(Connecticut, Maine, Massachusetts, New Hampshire, Rhode Island, Vermont)
+# Div2 <- c(New Jersey, New York, Pennsylvania)
+# Div3 <- c(Illinois, Indiana, Michigan, Ohio, Wisconsin)
+# Div4 <- c(Iowa, Kansas, Minnesota, Missouri, Nebraska, North Dakota, South Dakota)
+# Div5 <- c(Delaware, Florida, Georgia, Maryland, North Carolina, South Carolina, Virginia, District of Columbia, West Virginia)
+# Div6 <- c(Alabama, Kentucky, Mississippi, Tennessee)
+# Div7 <- c(Arkansas, Louisiana, Oklahoma, Texas)
+# Div8 <- c(Arizona, Colorado, Idaho, Montana, Nevada, New Mexico, Utah, Wyoming)
+# Div9 <- c(Alaska, California, Hawaii, Oregon, Washington)
+
+
+```
+
+
+2. Use `ifelse()` statements, `is.element()` or `%in%`, and the `Div` vectors to add a factor called `cens_reg` to `ct`.  **Note: do not call this variable just `region`**.  We'll need to reserve that for making choropleth maps later.
+    - Divs 1 & 2 correspond to Northeast
+    - Divs 3, 4 are the Midwest
+    - Divs 5, 6, 7 are the South
+    - Divs 8, 9 are the West
+    - Hint: initialize your column with `NA` values first  
+  
+```{r}
+Div1 <- c("Connecticut", "Maine", "Massachusetts", "New Hampshire", "Rhode Island", "Vermont")
+Div2 <- c("New Jersey", "New York", "Pennsylvania")
+Div3 <- c("Illinois", "Indiana", "Michigan", "Ohio", "Wisconsin")
+Div4 <- c("Iowa", "Kansas", "Minnesota", "Missouri", "Nebraska", "North Dakota", "South Dakota")
+Div5 <- c("Delaware", "Florida", "Georgia", "Maryland", "North Carolina", "South Carolina", "Virginia", "District of Columbia", "West Virginia")
+Div6 <- c("Alabama", "Kentucky", "Mississippi", "Tennessee")
+Div7 <- c("Arkansas", "Louisiana", "Oklahoma", "Texas")
+Div8 <- c("Arizona", "Colorado", "Idaho", "Montana", "Nevada", "New Mexico", "Utah", "Wyoming")
+Div9 <- c("Alaska", "California", "Hawaii", "Oregon", "Washington")
+
+
+
+ct$cens_reg <- NA
+ct$cens_reg <- ifelse(ct$state %in% c(Div1, Div2), "Northeast", ct$cens_reg)
+ct$cens_reg <- ifelse(is.element(ct$state, c(Div3, Div4)), "Midwest", ct$cens_reg)
+ct$cens_reg <- ifelse(ct$state %in% c(Div5, Div6, Div7), "South", ct$cens_reg)
+ct$cens_reg <- ifelse(ct$state %in% c(Div8, Div9), "West", ct$cens_reg)
+```
+
+
+
+
+
+## (Optional) Add county-level 2016 Presidential election data to `ct`
+
+You might be interested in seeing how COVID may be differentially impacting swing and left- and right-voting counties.  Continue if so.
+
+1. read in the data, and call it `elec`.  The URL is https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-16/master/2016_US_County_Level_Presidential_Results.csv (also on our github in the data folder)
+
+```{r}
+elec <- read.csv("https://raw.githubusercontent.com/tonmcg/US_County_Level_Election_Results_08-16/master/2016_US_County_Level_Presidential_Results.csv")
+```
+
+
+2. use `head()`, `dim()`, `str()` to get a sense of what is there.  
+
+3. Yay we have FIPS codes!  I'll go ahead and tell you that joining `ct` and this dataset by FIPS will work just fine **once you rename and convert the one in here to a factor.**  
+
+4. The larger task is that it is probably easier to make a few decisions right now (before the join) rather than later.   
+    a. try to decide on  
+        - which variables you are interested in  
+        - any variable transformations you think would be helpful  
+    b. once you've figured out what you want to do, do it!
+        - make sure your variables are formatted the way you want
+        - subset to just what you want (and need for the join, i.e. the FIPS column)
+        - give the variables better names using `names(ct)` or `colnames(ct)`
+
+```{r}
+# These are just what I decided on...
+elec$gop_winby <- elec$per_gop - elec$per_dem
+elec$win_party <- factor(ifelse(elec$gop_winby>0, "gop", "dem"))
+
+#subset
+elec <- elec[, c(9:13)]
+elec[1:5,]
+colnames(elec) <- c("state_abbr", "county", "fips", "gop_winby", "win")
+```
+
+
+5. perform the join.
+    - make sure the name of the FIPS variable is the same in `ct` and `elec`
+    - convert `elec$fips` to a factor.  The order shouldn't matter, as `dplyr` will end up comparing it as a character string
+    - remember to specify `by="fips"` in your `left_join()`
+    - do any renaming necessary
+
+```{r}
+#join
+elec$fips <- factor(elec$fips)
+ct <- left_join(ct, elec, by="fips")
+names(ct)
+colnames(ct)[2] <- "county"
+
+keep <- c("date", "county", "state", "fips", "cases", "deaths", "coastal", "countyst", "maxcases", "diffs_cases", "diffs_roll", "pop", "cens_reg", "gop_winby", "win")
+ct <- ct[, keep]
+```
+
+
+6. save without over-writing
+
+```{r}
+save(contents, ct, file="data/Ex2.3_popelec.Rdata")
+
+```
+
+
+
+
+
+## (Optional) Stay-at-home start/end dates (state-level)
+You might be interested in visualizing the impact of stay-at-home orders.  If so, continue.
+
+Our github has a file in the "data" folder named "ESRI_StayHomeOrders.csv" (*note: unfortunately this file is a bit dated.  I downloaded it from the [ESRI site](https://coronavirus-resources.esri.com/datasets/ASTHO::stay-at-home-orders-and-advisories/) a while back, but it does not seem to have been updated since*).  URL for the raw data is https://raw.githubusercontent.com/akseong/IntroEDA_Rggplot2/master/data/ESRI_StayHomeOrders.csv
+
+
+1. Read in the data as `esri`, and take a look.
+```{r}
+esri <- read.csv("https://raw.githubusercontent.com/akseong/IntroEDA_Rggplot2/master/data/ESRI_StayHomeOrders.csv")
+
+str(esri)
+esri[1:5, ]
+```
+
+
+
+2. use the package `stringr` to isolate/format the date string from the start dates in `esri$f4`.
+    - install and load the package
+    - view the `str_split()` help file by typing `?str_split`
+    - try it out and view the output.
+
+```{r}
+library(stringr)
+f4_list <- str_split(esri$f4, pattern=": ")
+f4_list
+```
+
+
+3. So the ouput is a list, and each element is either an `NA` or a vector of 2 elements, where the 2nd element is the start date.
+    - use `lapply()` with a (very simple) function that simply subsets to the second element of its input.  
+        - Note: we saw in the very first session that `x[2]` will return `NA` if `x` is a vector of length 1
+    - look at what you ended up with.  
+    - use `unlist()` to turn it into a vector
+```{r}
+start_list <- lapply(f4_list, function(x) x[2])
+start_vec <- unlist(start_list)
+```
+
+
+4. Try applying `as.Date()` on the vector.  Then look under the Examples heading of the help file by typing `?as.Date` to look for a solution.  Implement it.  
+    - Save the result in your dataframe `esri`
+    - Check it.  use `cbind()` and `as.character()`
+
+```{r}
+esri$stayhome_start <- as.Date(start_vec, "%m/%d/%y")
+cbind(as.character(esri$f4), as.character(esri$stayhome_start))
+```
+
+
+
+
+5. Do the same for the ending dates in `esri$f5`  
+    - you need to decide what to do with the "until further notice" values that you're going to get.  
+        - my first inclination was to make a **new categorical variable** for them, and turn them into NA's in the date vector.  
+
+```{r}
+esri[1:5, ]
+f5_list <- str_split(esri$f5, pattern=": ")
+end_vec <- unlist(lapply(f5_list, function(x) x[2]))
+
+#make "ongoing" factor
+ongoing_inds <- which(end_vec=="Until further notice")
+esri$stayhome_ongoing <- 0
+esri$stayhome_ongoing[ongoing_inds] <- 1
+
+# turn text into NA and then the whole vector into a Date obj
+end_vec[ongoing_inds] <- NA
+esri$stayhome_end <- as.Date(end_vec, "%m/%d/%y")
+
+# check
+cbind(as.character(esri$f5), as.character(esri$stayhome_end))
+
+```
+
+
+6. Subset to what you need, change column names.  A join might not be the best idea though... 
+
+```{r}
+names(esri)
+esri <- esri[, c("STATE", "stayhome_start", "stayhome_end", "stayhome_ongoing")]
+names(esri)[1] <- c("state")
+# ct <- left_join(ct, esri, by="state")
+```
+
+
+
+7. A join doesn't directly get us what we probably want, I think (though if you see a reason for doing it, go ahead!).  Instead, since `ct` has a `date` variable, let's add a column to `ct` indicating stay-at-home order status on each date.  
+    - the code for this is a bit complex, so you may just want to go ahead and use it.
+    - joining the data and using dplyr might work and be easier than the code provided below.
+
+```{r}
+ct$stayhome_active <- 0
+for(sname in as.character(esri$state)){
+  #extract start and end dates for the current state
+  start_date <- as.Date(esri[as.character(esri$state)==sname, "stayhome_start"])
+  end_date <- as.Date(esri[as.character(esri$state)==sname, "stayhome_end"])
+  # print(c(sname, start_date, end_date))
+  
+  if(is.na(start_date)){
+    next #skip to next loop.  NA start date means no stayhome_active dates
+  } else {
+    ct_inds <- which(ct$state==sname) # rows in ct about state sname
+    ct_dates <- ct$date[ct_inds]      # all dates for state sname
+    
+    if (is.na(end_date)){
+      # if have ongoing orders, all dates past the start dates
+      ct[ct_inds[ct_dates>=start_date], "stayhome_active"] <- 1
+    } else {
+      # if limited date range
+      ct[ct_inds[ct_dates>=start_date & ct_dates<end_date], "stayhome_active"] <- 1
+    }
+  }
+}
+
+
+contents <- c("ct", "esri", "cens", "elec")
+save(contents, ct, esri, cens, elec, file="data/Ex2_done_alldata.Rdata")
+```
+
+
+
+
+
+## Your data fortified, your skills honed, go forth and EDA!  
+
+Consider the relationships you are interested in exploring, the questions you want to answer, and make some investigations into the data!  This does not have to be a visualization, but if it is, awesome.  
+
+One note: I **highly** recommend that you sketch on paper a few ideas for any visualization before you start coding.
+
+Some ideas for `ggplot2` visualizations:
+
+- path of first date on record? (i.e. which county is first, then second, ...)
+- how could we visualize the impact of stay-at-home orders?
+- impact on... number of cases?  deaths?  death/case rates? first recorded cases?... of party preferences?
+
